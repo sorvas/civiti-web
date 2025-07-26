@@ -48,7 +48,7 @@ interface LocationData {
             <!-- County Selection -->
             <mat-form-field appearance="outline" class="w-full">
               <mat-label class="form-label">Județ</mat-label>
-              <mat-select formControlName="county" [disabled]="true">
+              <mat-select formControlName="county">
                 <mat-option value="B">București</mat-option>
               </mat-select>
               <mat-icon matSuffix>location_on</mat-icon>
@@ -57,7 +57,7 @@ interface LocationData {
             <!-- City Selection -->
             <mat-form-field appearance="outline" class="w-full">
               <mat-label class="form-label">Oraș</mat-label>
-              <mat-select formControlName="city" [disabled]="true">
+              <mat-select formControlName="city">
                 <mat-option value="BUCURESTI">București</mat-option>
               </mat-select>
               <mat-icon matSuffix>location_city</mat-icon>
@@ -182,8 +182,8 @@ export class LocationSelectionComponent implements OnInit {
   isLoading = false;
 
   locationForm = this._fb.group({
-    county: ['B', Validators.required],
-    city: ['BUCURESTI', Validators.required],
+    county: [{value: 'B', disabled: true}, Validators.required],
+    city: [{value: 'BUCURESTI', disabled: true}, Validators.required],
     district: ['SECTOR5', Validators.required] // Pre-select Sector 5 for MVP
   });
 

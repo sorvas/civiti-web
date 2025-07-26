@@ -39,6 +39,7 @@ export class IssueDetailComponent implements OnInit {
     private _router = inject(Router);
     private _store = inject(Store<AppState>);
     private _dialog = inject(MatDialog);
+    private _imageErrorCount: Map<string, number> = new Map();
 
     issue$: Observable<Issue | null | undefined>;
     isLoading$: Observable<boolean>;
@@ -92,13 +93,27 @@ export class IssueDetailComponent implements OnInit {
     }
 
     getPhotoUrl(photoPath: string): string {
-        // Return placeholder for development
-        return 'https://via.placeholder.com/400x300/E5E5E5/14213D?text=' +
-            encodeURIComponent('Foto Problemă');
+        // Use local placeholder for development
+        // In production, this would return the actual photo URL from backend
+        return '/images/placeholders/issue-placeholder.svg';
     }
 
     onImageError(event: any, index?: number): void {
-        event.target.src = 'https://via.placeholder.com/400x300/E5E5E5/14213D?text=Foto+' + (index ? index + 1 : 'Problemă');
+        const imgElement = event.target;
+        const currentSrc = imgElement.src;
+        
+        // Track error count per image to prevent infinite loops
+        const errorCount = this._imageErrorCount.get(currentSrc) || 0;
+        if (errorCount >= 1) {
+            // Already tried fallback, hide the image to prevent further errors
+            imgElement.style.display = 'none';
+            return;
+        }
+        
+        this._imageErrorCount.set(currentSrc, errorCount + 1);
+        
+        // Try local fallback image
+        imgElement.src = '/images/placeholders/issue-placeholder.svg';
     }
 
     getUrgencyLevel(issue: Issue): 'urgent' | 'normal' {

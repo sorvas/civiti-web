@@ -1,7 +1,6 @@
 import { MAT_ICON_DEFAULT_OPTIONS } from '@angular/material/icon';
 import {
   ApplicationConfig,
-  provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
   isDevMode,
 } from '@angular/core';
@@ -20,7 +19,6 @@ import { IssueEffects } from './store/issues/issue.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withPreloading(PreloadAllModules)),
     provideStore(reducers),

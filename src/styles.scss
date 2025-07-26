@@ -4,11 +4,11 @@
 // Angular Material Theme Configuration (must come first)
 @use '@angular/material' as mat;
 
+// Import ngm-dev-blocks styles using @use
+@use './app/ngm-dev-blocks/styles/ngm-dev-blocks-styles.scss';
+
 // Include Angular Material core
 @include mat.core();
-
-// Import Fira Sans Typography
-@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700;800&display=swap');
 
 // Define Civica CSS Variables (from Colour-Scheme.md)
 :root {
@@ -67,9 +67,68 @@
   --gradient-cta: linear-gradient(135deg, #FCA311 0%, #FDB833 100%);
 }
 
+// Fix Material component styling for Civica theme
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    background-color: var(--color-surface);
+    border-color: var(--platinum);
+
+    &.mdc-text-field--outlined {
+
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: var(--platinum);
+      }
+
+      &:hover .mdc-notched-outline__leading,
+      &:hover .mdc-notched-outline__notch,
+      &:hover .mdc-notched-outline__trailing {
+        border-color: var(--oxford-blue);
+      }
+
+      &.mdc-text-field--focused .mdc-notched-outline__leading,
+      &.mdc-text-field--focused .mdc-notched-outline__notch,
+      &.mdc-text-field--focused .mdc-notched-outline__trailing {
+        border-color: var(--orange-web);
+        border-width: 2px;
+      }
+    }
+  }
+
+  .mat-mdc-select-trigger {
+    color: var(--color-text);
+  }
+
+  .mat-mdc-form-field-label {
+    color: var(--oxford-blue);
+    opacity: 0.7;
+  }
+}
+
+// Fix select dropdown styling
+.mat-mdc-select-panel {
+  background-color: var(--color-surface);
+  border: 1px solid var(--platinum);
+  box-shadow: 0 4px 12px rgba(20, 33, 61, 0.15);
+}
+
+.mat-mdc-option {
+  color: var(--color-text);
+
+  &:hover,
+  &.mat-mdc-option-active {
+    background-color: var(--orange-web-20);
+  }
+
+  &.mat-mdc-option-selected {
+    background-color: var(--orange-web);
+    color: white;
+  }
+}
+
 // Set base styles for the application
 html {
-
   // Set color scheme and base styles
   color-scheme: light;
   background-color: var(--color-background);
