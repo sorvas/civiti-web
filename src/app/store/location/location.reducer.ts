@@ -18,7 +18,24 @@ export const locationReducer = createReducer(
     county,
     city,
     district,
-    error: null
+    error: null,
+    loading: false
+  })),
+  
+  on(LocationActions.loadLocationFromStorage, (state) => ({
+    ...state,
+    loading: true
+  })),
+  
+  on(LocationActions.loadLocationFromStorageComplete, (state) => ({
+    ...state,
+    loading: false
+  })),
+  
+  on(LocationActions.loadLocationFromStorageFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error
   })),
   
   on(LocationActions.clearLocation, () => initialLocationState)

@@ -12,3 +12,12 @@ export const loadLocationFromStorage = createAction(
 export const clearLocation = createAction(
   '[Location] Clear Location'
 );
+
+export const loadLocationFromStorageComplete = createAction(
+  '[Location] Load Location From Storage Complete'
+);
+
+export const loadLocationFromStorageFailure = createAction(
+  '[Location] Load Location From Storage Failure',
+  props<{ error: string }>()
+);

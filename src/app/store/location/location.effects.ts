@@ -53,10 +53,13 @@ export class LocationEffects {
             if (isPlatformBrowser(this.platformId)) {
               sessionStorage.removeItem('civica-location');
             }
+            return LocationActions.loadLocationFromStorageFailure({ 
+              error: 'Failed to parse location data from storage' 
+            });
           }
         }
-        // Return a no-op action if storage is empty or invalid
-        return { type: '[Location] Load Location From Storage Complete' };
+        // Return a completion action if storage is empty or invalid
+        return LocationActions.loadLocationFromStorageComplete();
       })
     )
   );

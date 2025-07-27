@@ -1,7 +1,7 @@
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, inject, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatDialogModule, MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,6 +13,11 @@ import * as IssueActions from '../../store/issues/issue.actions';
 import { MockDataService, Issue, Authority, EmailTemplate } from '../../services/mock-data.service';
 import { CustomValidators } from '../../validators/custom-validators';
 import { SanitizationService } from '../../services/sanitization.service';
+
+export interface EmailModalData {
+    issue: Issue;
+    authority: Authority;
+}
 
 @Component({
     selector: 'app-email-modal',
@@ -37,11 +42,16 @@ export class EmailModalComponent implements OnInit {
     private _dialog = inject(MatDialog);
     private _sanitizer = inject(SanitizationService);
 
-    @Input() issue!: Issue;
-    @Input() authority!: Authority;
+    issue: Issue;
+    authority: Authority;
 
     emailTemplate: EmailTemplate | null = null;
     isGenerating = false;
+
+    constructor(@Inject(MAT_DIALOG_DATA) public data: EmailModalData) {
+        this.issue = data.issue;
+        this.authority = data.authority;
+    }
 
     emailForm = this._fb.group({
         name: ['', [
@@ -66,6 +76,11 @@ export class EmailModalComponent implements OnInit {
 
     ngOnInit(): void {
         this.generateEmailTemplate();
+        
+        // Listen for form changes to regenerate email template
+        this.emailForm.valueChanges.subscribe(() => {
+            this.onFormChange();
+        });
     }
 
     onFormChange(): void {

@@ -69,17 +69,6 @@ export class IssueDetailComponent implements OnInit {
             data: { issue, authority }
         });
 
-        // Pass data to modal
-        const modalInstance = dialogRef.componentInstance;
-        modalInstance.issue = issue;
-        modalInstance.authority = authority;
-        modalInstance.ngOnInit();
-
-        // Listen for form changes to regenerate email template
-        modalInstance.emailForm.valueChanges.subscribe(() => {
-            modalInstance.onFormChange();
-        });
-
         // Refresh issue data after modal closes to update email count
         dialogRef.afterClosed().subscribe(() => {
             this._store.dispatch(IssueActions.loadIssue({ id: issue.id }));
