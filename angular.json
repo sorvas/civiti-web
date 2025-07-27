@@ -17,6 +17,8 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "outputPath": "dist/Civica",
+            "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
@@ -28,11 +30,9 @@
               }
             ],
             "styles": [
-              "src/styles.scss",
-              "src/app/ngm-dev-blocks/styles/ngm-dev-blocks-styles.scss"
+              "src/styles.scss"
             ],
             "server": "src/main.server.ts",
-            "outputMode": "server",
             "ssr": {
               "entry": "src/server.ts"
             }
@@ -93,5 +93,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "1af8e0b9-29cd-47dc-bef4-cacc8f4c776a"
   }
 }

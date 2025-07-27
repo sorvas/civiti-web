@@ -7,7 +7,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
+import { Store } from '@ngrx/store';
+import { AppState } from '../../store/app.state';
+import * as LocationActions from '../../store/location/location.actions';
 import { MockDataService } from '../../services/mock-data.service';
+import { SanitizationService } from '../../services/sanitization.service';
 
 interface LocationData {
   counties: { id: string; name: string }[];
@@ -44,7 +48,7 @@ interface LocationData {
             <!-- County Selection -->
             <mat-form-field appearance="outline" class="w-full">
               <mat-label class="form-label">Județ</mat-label>
-              <mat-select formControlName="county" [disabled]="true">
+              <mat-select formControlName="county">
                 <mat-option value="B">București</mat-option>
               </mat-select>
               <mat-icon matSuffix>location_on</mat-icon>
@@ -53,7 +57,7 @@ interface LocationData {
             <!-- City Selection -->
             <mat-form-field appearance="outline" class="w-full">
               <mat-label class="form-label">Oraș</mat-label>
-              <mat-select formControlName="city" [disabled]="true">
+              <mat-select formControlName="city">
                 <mat-option value="BUCURESTI">București</mat-option>
               </mat-select>
               <mat-icon matSuffix>location_city</mat-icon>
@@ -170,14 +174,16 @@ interface LocationData {
 export class LocationSelectionComponent implements OnInit {
   private _fb = inject(FormBuilder);
   private _router = inject(Router);
+  private _store = inject(Store<AppState>);
   private _mockDataService = inject(MockDataService);
+  private _sanitizer = inject(SanitizationService);
 
   locationData: LocationData | null = null;
   isLoading = false;
 
   locationForm = this._fb.group({
-    county: ['B', Validators.required],
-    city: ['BUCURESTI', Validators.required],
+    county: [{value: 'B', disabled: true}, Validators.required],
+    city: [{value: 'BUCURESTI', disabled: true}, Validators.required],
     district: ['SECTOR5', Validators.required] // Pre-select Sector 5 for MVP
   });
 
@@ -201,11 +207,18 @@ export class LocationSelectionComponent implements OnInit {
 
   onContinue(): void {
     if (this.locationForm.valid) {
-      const selectedLocation = this.locationForm.value;
-      console.log('Selected location:', selectedLocation);
+      // Use getRawValue() to include disabled form controls
+      const rawData = this.locationForm.getRawValue();
       
-      // Store selection in session storage for consistency
-      sessionStorage.setItem('civica-location', JSON.stringify(selectedLocation));
+      // Sanitize values before storing
+      const selectedLocation = {
+        county: this._sanitizer.sanitizeUrlParam(rawData.county || ''),
+        city: this._sanitizer.sanitizeUrlParam(rawData.city || ''),
+        district: this._sanitizer.sanitizeUrlParam(rawData.district || '')
+      };
+      
+      // Dispatch action to store location in state (effects will handle storage)
+      this._store.dispatch(LocationActions.setLocation(selectedLocation));
       
       // Navigate to issues list
       this._router.navigate(['/issues']);

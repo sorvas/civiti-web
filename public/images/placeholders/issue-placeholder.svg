@@ -1,0 +1,11 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#E5E5E5"/>
+  <g transform="translate(200, 150)">
+    <rect x="-40" y="-40" width="80" height="60" fill="#999" rx="4"/>
+    <circle cx="0" cy="-10" r="15" fill="#E5E5E5"/>
+    <path d="M-30,30 L-10,10 L10,20 L30,0" stroke="#E5E5E5" stroke-width="3" fill="none"/>
+  </g>
+  <text x="200" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#666">
+    Fotografie problemă
+  </text>
+</svg>
