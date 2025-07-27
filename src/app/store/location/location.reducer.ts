@@ -24,14 +24,24 @@ export const locationReducer = createReducer(
   on(LocationActions.loadLocationFromStorage, (state) => {
     const stored = sessionStorage.getItem('civica-location');
     if (stored) {
-      const location = JSON.parse(stored);
-      return {
-        ...state,
-        county: location.county,
-        city: location.city,
-        district: location.district,
-        error: null
-      };
+      try {
+        const location = JSON.parse(stored);
+        // Validate the parsed data has expected properties
+        if (location && typeof location === 'object' && 
+            'county' in location && 'city' in location && 'district' in location) {
+          return {
+            ...state,
+            county: location.county,
+            city: location.city,
+            district: location.district,
+            error: null
+          };
+        }
+      } catch (error) {
+        // If parsing fails or data is invalid, clear the corrupted storage
+        console.error('Failed to parse location from storage:', error);
+        sessionStorage.removeItem('civica-location');
+      }
     }
     return state;
   }),

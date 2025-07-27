@@ -207,7 +207,8 @@ export class LocationSelectionComponent implements OnInit {
 
   onContinue(): void {
     if (this.locationForm.valid) {
-      const rawData = this.locationForm.value;
+      // Use getRawValue() to include disabled form controls
+      const rawData = this.locationForm.getRawValue();
       
       // Sanitize values before storing
       const selectedLocation = {
