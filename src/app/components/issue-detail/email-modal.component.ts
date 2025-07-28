@@ -88,7 +88,7 @@ export class EmailModalComponent implements OnInit {
     }
 
     private generateEmailTemplate(): void {
-        if (this.issue && this.authority) {
+        if (this.issue && this.authority && this.emailForm.valid) {
             const rawData = this.emailForm.value;
             
             // Sanitize all inputs before generating template
@@ -108,6 +108,9 @@ export class EmailModalComponent implements OnInit {
                 this.authority,
                 userData
             );
+        } else {
+            // Clear email template when form is invalid
+            this.emailTemplate = null;
         }
     }
 

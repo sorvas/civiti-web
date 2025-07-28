@@ -77,41 +77,51 @@
         Previzualizare Email
       </h3>
       
-      <!-- Email To -->
-      <div class="mb-3">
-        <div class="flex items-center justify-between">
-          <strong class="text-oxford-blue">Către:</strong>
-          <button mat-icon-button (click)="copyToClipboard(authority.email || '')" 
-                  matTooltip="Copiază adresa email">
-            <mat-icon class="text-orange-web">content_copy</mat-icon>
-          </button>
-        </div>
-        <p class="text-sm text-oxford-blue opacity-75 mt-1">{{ authority.email }}</p>
+      <!-- Show message when form is invalid -->
+      <div *ngIf="!emailForm.valid" class="text-center py-8">
+        <mat-icon class="text-5xl text-gray-400 mb-3">email</mat-icon>
+        <p class="text-gray-600 mb-2">Completează câmpurile obligatorii pentru a vedea previzualizarea email-ului</p>
+        <p class="text-sm text-gray-500">Câmpurile marcate cu * sunt obligatorii</p>
       </div>
 
-      <!-- Email Subject -->
-      <div class="mb-3">
-        <div class="flex items-center justify-between">
-          <strong class="text-oxford-blue">Subiect:</strong>
-          <button mat-icon-button (click)="copyToClipboard(emailTemplate?.subject || '')" 
-                  matTooltip="Copiază subiectul">
-            <mat-icon class="text-orange-web">content_copy</mat-icon>
-          </button>
+      <!-- Show email preview when form is valid -->
+      <div *ngIf="emailForm.valid">
+        <!-- Email To -->
+        <div class="mb-3">
+          <div class="flex items-center justify-between">
+            <strong class="text-oxford-blue">Către:</strong>
+            <button mat-icon-button (click)="copyToClipboard(authority.email || '')" 
+                    matTooltip="Copiază adresa email">
+              <mat-icon class="text-orange-web">content_copy</mat-icon>
+            </button>
+          </div>
+          <p class="text-sm text-oxford-blue opacity-75 mt-1">{{ authority.email }}</p>
         </div>
-        <p class="text-sm text-oxford-blue opacity-75 mt-1">{{ emailTemplate?.subject }}</p>
-      </div>
 
-      <!-- Email Body -->
-      <div class="mb-3">
-        <div class="flex items-center justify-between">
-          <strong class="text-oxford-blue">Mesaj:</strong>
-          <button mat-icon-button (click)="copyToClipboard(emailTemplate?.body || '')" 
-                  matTooltip="Copiază mesajul">
-            <mat-icon class="text-orange-web">content_copy</mat-icon>
-          </button>
+        <!-- Email Subject -->
+        <div class="mb-3">
+          <div class="flex items-center justify-between">
+            <strong class="text-oxford-blue">Subiect:</strong>
+            <button mat-icon-button (click)="copyToClipboard(emailTemplate?.subject || '')" 
+                    matTooltip="Copiază subiectul">
+              <mat-icon class="text-orange-web">content_copy</mat-icon>
+            </button>
+          </div>
+          <p class="text-sm text-oxford-blue opacity-75 mt-1">{{ emailTemplate?.subject }}</p>
         </div>
-        <div class="email-body bg-white p-3 rounded mt-2 border max-h-64 overflow-y-auto">
-          {{ emailTemplate?.body }}
+
+        <!-- Email Body -->
+        <div class="mb-3">
+          <div class="flex items-center justify-between">
+            <strong class="text-oxford-blue">Mesaj:</strong>
+            <button mat-icon-button (click)="copyToClipboard(emailTemplate?.body || '')" 
+                    matTooltip="Copiază mesajul">
+              <mat-icon class="text-orange-web">content_copy</mat-icon>
+            </button>
+          </div>
+          <div class="email-body bg-white p-3 rounded mt-2 border max-h-64 overflow-y-auto">
+            {{ emailTemplate?.body }}
+          </div>
         </div>
       </div>
     </div>
