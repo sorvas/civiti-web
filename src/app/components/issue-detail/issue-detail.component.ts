@@ -51,6 +51,8 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     private _geocodedAddress: string | null = null;
     private _destroy$ = new Subject<void>();
     private _dialogSubscription?: Subscription;
+    private _geocodeRetryCount = 0;
+    private readonly _maxGeocodeRetries = 10;
     
     @ViewChild('infoWindow') infoWindow!: MapInfoWindow;
     @ViewChild('markerElement') markerElement!: MapMarker;
@@ -163,6 +165,9 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         if (this._lightbox) {
             this._lightbox.destroy();
         }
+        
+        // Reset geocoding retry count
+        this._geocodeRetryCount = 0;
     }
 
     private async initializeGallery(): Promise<void> {
@@ -304,11 +309,24 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
         // Check if Google Maps API is loaded
         if (typeof google === 'undefined' || !google.maps || !google.maps.Geocoder) {
-            console.warn('Google Maps API not yet loaded, retrying...');
-            // Retry after a delay
-            setTimeout(() => this.geocodeAddress(address), 500);
+            this._geocodeRetryCount++;
+            
+            if (this._geocodeRetryCount >= this._maxGeocodeRetries) {
+                console.error(`Google Maps API failed to load after ${this._maxGeocodeRetries} attempts`);
+                // Fall back to default coordinates if available
+                this.fallbackToDefaultCoordinates();
+                return;
+            }
+            
+            console.warn(`Google Maps API not yet loaded, retrying... (attempt ${this._geocodeRetryCount}/${this._maxGeocodeRetries})`);
+            // Retry after a delay with exponential backoff
+            const delay = Math.min(500 * Math.pow(1.5, this._geocodeRetryCount - 1), 5000);
+            setTimeout(() => this.geocodeAddress(address), delay);
             return;
         }
+        
+        // Reset retry count on successful API access
+        this._geocodeRetryCount = 0;
 
         try {
             const geocoder = new google.maps.Geocoder();
@@ -352,8 +370,17 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
             });
         } catch (error) {
             console.error('Error initializing geocoder:', error);
-            // Retry after a delay
-            setTimeout(() => this.geocodeAddress(address), 1000);
+            this._geocodeRetryCount++;
+            
+            if (this._geocodeRetryCount >= this._maxGeocodeRetries) {
+                console.error('Max retry attempts reached for geocoding');
+                this.fallbackToDefaultCoordinates();
+                return;
+            }
+            
+            // Retry after a delay with exponential backoff
+            const delay = Math.min(1000 * Math.pow(1.5, this._geocodeRetryCount - 1), 5000);
+            setTimeout(() => this.geocodeAddress(address), delay);
         }
     }
 
@@ -378,5 +405,23 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
             default:
                 return `Geocoding failed with status: ${status}`;
         }
+    }
+    
+    private fallbackToDefaultCoordinates(): void {
+        // Try to use coordinates from the issue if available
+        this.issue$.pipe(
+            filter(issue => !!issue),
+            take(1)
+        ).subscribe(issue => {
+            if (issue.location.lat && issue.location.lng) {
+                this.mapCenter = { lat: issue.location.lat, lng: issue.location.lng };
+                this.markerPosition = { lat: issue.location.lat, lng: issue.location.lng };
+                console.log('Using fallback coordinates from issue data');
+            } else {
+                // Use default Bucharest coordinates as last resort
+                console.log('Using default Bucharest coordinates');
+            }
+            this._cdr.detectChanges();
+        });
     }
 }

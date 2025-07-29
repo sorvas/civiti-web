@@ -4,22 +4,53 @@ const path = require('path');
 // Get the Google Maps API key from environment variable
 const googleMapsApiKey = process.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
-if (!googleMapsApiKey) {
-  console.warn('Warning: VITE_GOOGLE_MAPS_API_KEY environment variable is not set');
-  console.warn('Please set it in Vercel Dashboard for production deployment');
-  process.exit(0); // Don't fail the build, just warn
+// Path to the source index.html
+const srcIndexPath = path.join(__dirname, '../src/index.html');
+
+// First, ensure the source file has the placeholder (not a key)
+const srcContent = fs.readFileSync(srcIndexPath, 'utf8');
+if (!srcContent.includes('YOUR_DEVELOPMENT_API_KEY')) {
+  // Restore the placeholder if it's missing
+  const restoredContent = srcContent.replace(
+    /key:\s*"[^"]*"/,
+    'key: "YOUR_DEVELOPMENT_API_KEY"'
+  );
+  fs.writeFileSync(srcIndexPath, restoredContent, 'utf8');
+  console.log('Restored placeholder in src/index.html');
 }
 
-// Update index.html with the API key
-const indexPath = path.join(__dirname, '../src/index.html');
-let indexContent = fs.readFileSync(indexPath, 'utf8');
+if (!googleMapsApiKey) {
+  console.warn('Warning: VITE_GOOGLE_MAPS_API_KEY environment variable is not set');
+  console.warn('Google Maps will not work without a valid API key');
+  // Exit successfully - the build should continue with the placeholder
+  process.exit(0);
+}
 
-// Replace the placeholder with the actual API key
-indexContent = indexContent.replace(
-  'YOUR_DEVELOPMENT_API_KEY',
-  googleMapsApiKey
-);
+// For production builds, we need to modify the file after Angular copies it
+// This is a post-build script that should run after ng build
+const distPaths = [
+  path.join(__dirname, '../dist/Civica/browser/index.html'),
+  path.join(__dirname, '../dist/Civica/index.html'),
+  path.join(__dirname, '../dist/index.html')
+];
 
-fs.writeFileSync(indexPath, indexContent, 'utf8');
+// Try to find and update the dist index.html
+let found = false;
+for (const distPath of distPaths) {
+  if (fs.existsSync(distPath)) {
+    let distContent = fs.readFileSync(distPath, 'utf8');
+    distContent = distContent.replace(
+      'YOUR_DEVELOPMENT_API_KEY',
+      googleMapsApiKey
+    );
+    fs.writeFileSync(distPath, distContent, 'utf8');
+    console.log(`Google Maps API key injected into ${distPath}`);
+    found = true;
+  }
+}
 
-console.log('Google Maps API key injected into index.html');
+if (!found) {
+  // If dist doesn't exist yet, this is a pre-build script
+  // Just log a message - the actual injection will happen in a post-build step
+  console.log('Note: API key will be injected after the build completes');
+}
