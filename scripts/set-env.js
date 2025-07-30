@@ -87,28 +87,71 @@ if (isDevelopment) {
   console.log('Placeholder restored in src/index.html');
 } else {
   // For production builds, we need to modify the file after Angular copies it
+  console.log('Production build mode - searching for dist files...');
+  
+  // Wait a bit for the build to complete if needed
+  const maxAttempts = 10;
+  let attempt = 0;
+  let found = false;
+  
   const distPaths = [
     path.join(__dirname, '../dist/Civica/browser/index.html'),
     path.join(__dirname, '../dist/Civica/index.html'),
     path.join(__dirname, '../dist/index.html')
   ];
-
-  // Try to find and update the dist index.html
-  let found = false;
-  for (const distPath of distPaths) {
-    if (fs.existsSync(distPath)) {
-      let distContent = fs.readFileSync(distPath, 'utf8');
-      distContent = distContent.replace(
-        'YOUR_DEVELOPMENT_API_KEY',
-        googleMapsApiKey
-      );
-      fs.writeFileSync(distPath, distContent, 'utf8');
-      console.log(`Google Maps API key injected into ${distPath}`);
-      found = true;
+  
+  // Function to try updating the files
+  function tryUpdate() {
+    for (const distPath of distPaths) {
+      if (fs.existsSync(distPath)) {
+        console.log(`Found dist file at: ${distPath}`);
+        let distContent = fs.readFileSync(distPath, 'utf8');
+        
+        if (distContent.includes('YOUR_DEVELOPMENT_API_KEY')) {
+          distContent = distContent.replace(
+            'YOUR_DEVELOPMENT_API_KEY',
+            googleMapsApiKey
+          );
+          fs.writeFileSync(distPath, distContent, 'utf8');
+          console.log(`Google Maps API key injected into ${distPath}`);
+          found = true;
+        } else {
+          console.log(`API key already present or placeholder not found in ${distPath}`);
+          found = true;
+        }
+      }
     }
+    return found;
   }
-
+  
+  // Try immediately
+  found = tryUpdate();
+  
+  // If not found, wait and retry
   if (!found) {
-    console.log('Note: API key will be injected after the build completes');
+    console.log('Dist files not found yet, will retry...');
+    
+    // Use a promise to handle async waiting
+    const waitForFiles = new Promise((resolve) => {
+      const interval = setInterval(() => {
+        attempt++;
+        found = tryUpdate();
+        
+        if (found || attempt >= maxAttempts) {
+          clearInterval(interval);
+          if (!found) {
+            console.error('ERROR: Could not find dist files to inject API key!');
+            console.error('Build may fail. Ensure VITE_GOOGLE_MAPS_API_KEY is set in environment.');
+            process.exit(1);
+          }
+          resolve();
+        }
+      }, 1000);
+    });
+    
+    // Wait for the files to be found and updated
+    waitForFiles.then(() => {
+      console.log('API key injection completed');
+    });
   }
 }
