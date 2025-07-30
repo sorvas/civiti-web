@@ -3,7 +3,7 @@
 
 if git diff --cached --name-only | grep -q "src/index.html"; then
   # Check if the placeholder has been replaced with an actual key
-  if git diff --cached src/index.html | grep -q "key=" | grep -v "key=YOUR_DEVELOPMENT_API_KEY"; then
+  if git diff --cached src/index.html | grep "key=" | grep -v "key=YOUR_DEVELOPMENT_API_KEY" | grep -q .; then
     echo "ERROR: Google Maps API key detected in src/index.html!"
     echo ""
     echo "To fix this issue:"
