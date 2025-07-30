@@ -12,7 +12,15 @@ if (!googleMapsApiKey) {
 console.log('Pre-build API key injection...');
 
 // Update the TypeScript config file BEFORE build
-const configPath = path.join(__dirname, '../src/environments/google-maps-config.ts');
+const configDir = path.join(__dirname, '../src/environments');
+const configPath = path.join(configDir, 'google-maps-config.ts');
+
+// Ensure directory exists
+if (!fs.existsSync(configDir)) {
+  fs.mkdirSync(configDir, { recursive: true });
+  console.log('Created environments directory');
+}
+
 console.log('Updating google-maps-config.ts...');
 const configContent = `// This file is auto-generated during build
 export const googleMapsConfig = {

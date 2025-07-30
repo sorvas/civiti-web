@@ -55,7 +55,15 @@ if (isDevelopment) {
   console.log('Development mode detected');
   
   // Update TypeScript config file
-  const configPath = path.join(__dirname, '../src/environments/google-maps-config.ts');
+  const configDir = path.join(__dirname, '../src/environments');
+  const configPath = path.join(configDir, 'google-maps-config.ts');
+  
+  // Ensure directory exists
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+    console.log('Created environments directory');
+  }
+  
   const configContent = `// This file is auto-generated - DO NOT COMMIT
 export const googleMapsConfig = {
   apiKey: '${googleMapsApiKey}'
@@ -99,7 +107,15 @@ export const googleMapsConfig = {
   console.log('✓ Placeholder restored in src/index.html');
   
   // Restore TypeScript config
-  const configPath = path.join(__dirname, '../src/environments/google-maps-config.ts');
+  const configDir = path.join(__dirname, '../src/environments');
+  const configPath = path.join(configDir, 'google-maps-config.ts');
+  
+  // Ensure directory exists
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+    console.log('Created environments directory');
+  }
+  
   const configContent = `// This file will be replaced during build
 export const googleMapsConfig = {
   apiKey: 'YOUR_DEVELOPMENT_API_KEY'
