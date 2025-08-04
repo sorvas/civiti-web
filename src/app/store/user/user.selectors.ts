@@ -42,7 +42,7 @@ export const selectUserBadges = createSelector(
 
 export const selectUserStats = createSelector(
   selectGamificationData,
-  (gamification) => gamification?.stats
+  (gamification) => gamification?.stats || null
 );
 
 export const selectUserAchievements = createSelector(
@@ -132,7 +132,7 @@ export const selectNextLevelProgress = createSelector(
     const pointsInCurrentLevel = points % 1000;
     return {
       current: pointsInCurrentLevel,
-      total: 1000,
+      required: 1000,
       percentage: (pointsInCurrentLevel / 1000) * 100
     };
   }

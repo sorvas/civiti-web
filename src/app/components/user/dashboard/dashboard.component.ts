@@ -138,7 +138,7 @@ import {
                 class="level-progress">
               </nz-progress>
               <p class="progress-text">
-                {{ progress.current }} / {{ progress.total }} points to Level {{ (userLevel$ | async)! + 1 }}
+                {{ progress.current }} / {{ progress.required }} points to Level {{ (userLevel$ | async)! + 1 }}
               </p>
             </div>
           </div>
