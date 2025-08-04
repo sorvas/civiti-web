@@ -25,10 +25,17 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { AppState } from '../../../store/app.state';
 import * as AuthActions from '../../../store/auth/auth.actions';
 import * as UserActions from '../../../store/user/user.actions';
+import { AuthUser } from '../../../store/auth/auth.state';
 import { 
   selectAuthUser,
   selectUserDisplayName 
 } from '../../../store/auth/auth.selectors';
+import {
+  GamificationData,
+  Badge,
+  Achievement,
+  UserStats
+} from '../../../store/user/user.state';
 import {
   selectGamificationData,
   selectUserPoints,
@@ -64,7 +71,7 @@ import {
     NzMenuModule
   ],
   template: `
-    <div class="dashboard-container" nz-spin [nzSpinning]="isLoading$ | async">
+    <div class="dashboard-container" nz-spin [nzSpinning]="(isLoading$ | async) || false">
       
       <!-- Header Section -->
       <div class="dashboard-header">
@@ -148,7 +155,7 @@ import {
                 [nzValue]="stats.issuesReported"
                 nzTitle="Issues Reported"
                 [nzPrefix]="statIcons.reported"
-                nzValueStyle="color: #FCA311">
+                [nzValueStyle]="{ color: '#FCA311' }">
               </nz-statistic>
             </nz-card>
           </div>
@@ -159,7 +166,7 @@ import {
                 [nzValue]="stats.issuesResolved"
                 nzTitle="Issues Resolved"
                 [nzPrefix]="statIcons.resolved"
-                nzValueStyle="color: #28A745">
+                [nzValueStyle]="{ color: '#28A745' }">
               </nz-statistic>
             </nz-card>
           </div>
@@ -170,7 +177,7 @@ import {
                 [nzValue]="stats.communityVotes"
                 nzTitle="Community Votes"
                 [nzPrefix]="statIcons.votes"
-                nzValueStyle="color: #14213D">
+                [nzValueStyle]="{ color: '#14213D' }">
               </nz-statistic>
             </nz-card>
           </div>
@@ -182,7 +189,7 @@ import {
                 nzSuffix="%"
                 nzTitle="Approval Rate"
                 [nzPrefix]="statIcons.approval"
-                nzValueStyle="color: #6c757d">
+                [nzValueStyle]="{ color: '#6c757d' }">
               </nz-statistic>
             </nz-card>
           </div>
@@ -240,8 +247,8 @@ import {
             <!-- Recent Activity -->
             <nz-card nzTitle="Recent Activity" class="activity-card">
               <nz-list 
-                nzDataSource="mockActivity" 
-                nzRenderItem="activityItem"
+                [nzDataSource]="mockActivity" 
+                [nzRenderItem]="activityItem"
                 [nzLoading]="false">
                 <ng-template #activityItem let-item>
                   <nz-list-item>
@@ -690,18 +697,18 @@ import {
 export class DashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  // Observables
-  user$ = this.store.select(selectAuthUser);
-  displayName$ = this.store.select(selectUserDisplayName);
-  gamificationData$ = this.store.select(selectGamificationData);
-  userPoints$ = this.store.select(selectUserPoints);
-  userLevel$ = this.store.select(selectUserLevel);
-  userBadges$ = this.store.select(selectUserBadges);
-  userStats$ = this.store.select(selectUserStats);
-  levelProgress$ = this.store.select(selectNextLevelProgress);
-  recentBadges$ = this.store.select(selectRecentBadges);
-  incompleteAchievements$ = this.store.select(selectIncompleteAchievements);
-  isLoading$ = this.store.select(selectUserLoading);
+  // Observables - initialized in constructor
+  user$!: Observable<AuthUser | null>;
+  displayName$!: Observable<string>;
+  gamificationData$!: Observable<GamificationData | null>;
+  userPoints$!: Observable<number>;
+  userLevel$!: Observable<number>;
+  userBadges$!: Observable<Badge[]>;
+  userStats$!: Observable<UserStats | null>;
+  levelProgress$!: Observable<{ current: number; required: number; percentage: number }>;
+  recentBadges$!: Observable<Badge[]>;
+  incompleteAchievements$!: Observable<Achievement[]>;
+  isLoading$!: Observable<boolean>;
 
   // Mock data for demonstration
   mockActivity = [
@@ -738,7 +745,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(
     private store: Store<AppState>,
     private router: Router
-  ) {}
+  ) {
+    // Initialize observables
+    this.user$ = this.store.select(selectAuthUser);
+    this.displayName$ = this.store.select(selectUserDisplayName);
+    this.gamificationData$ = this.store.select(selectGamificationData);
+    this.userPoints$ = this.store.select(selectUserPoints);
+    this.userLevel$ = this.store.select(selectUserLevel);
+    this.userBadges$ = this.store.select(selectUserBadges);
+    this.userStats$ = this.store.select(selectUserStats);
+    this.levelProgress$ = this.store.select(selectNextLevelProgress);
+    this.recentBadges$ = this.store.select(selectRecentBadges);
+    this.incompleteAchievements$ = this.store.select(selectIncompleteAchievements);
+    this.isLoading$ = this.store.select(selectUserLoading);
+  }
 
   ngOnInit(): void {
     // Load user data when component initializes
@@ -749,7 +769,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.store.dispatch(UserActions.loadUserPreferences({ userId: user.id }));
         
         // Update login streak
-        this.store.dispatch(UserActions.updateStreak({ type: 'login', increment: true }));
+        this.store.dispatch(UserActions.updateStreak({ streakType: 'login', increment: true }));
       }
     });
   }

@@ -107,8 +107,8 @@ export class UserEffects {
   updateStreak$ = createEffect(() =>
     this.actions$.pipe(
       ofType(UserActions.updateStreak),
-      switchMap(({ type, increment }) =>
-        this.mockUserService.updateStreak(type, increment).pipe(
+      switchMap(({ streakType, increment }) =>
+        this.mockUserService.updateStreak(streakType, increment).pipe(
           map(gamification => UserActions.updateStreakSuccess({ gamification })),
           catchError(error => {
             console.error('Failed to update streak:', error);

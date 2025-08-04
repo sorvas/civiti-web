@@ -70,7 +70,7 @@ export const awardBadgeSuccess = createAction(
 
 export const updateStreak = createAction(
   '[User] Update Streak',
-  props<{ type: 'login' | 'voting'; increment: boolean }>()
+  props<{ streakType: 'login' | 'voting'; increment: boolean }>()
 );
 
 export const updateStreakSuccess = createAction(

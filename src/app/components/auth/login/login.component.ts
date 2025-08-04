@@ -62,7 +62,7 @@ import {
       <div class="login-form-container">
         <nz-card [nzBordered]="false" class="login-form-card">
           
-          <div nz-spin [nzSpinning]="isLoading$ | async">
+          <div nz-spin [nzSpinning]="(isLoading$ | async) || false">
             
             <!-- Error Alert -->
             <nz-alert
@@ -174,7 +174,7 @@ import {
               <ng-template #demoDescription>
                 <p>Use these credentials to explore the platform:</p>
                 <ul>
-                  <li><strong>Email:</strong> test@civica.ro</li>
+                  <li><strong>Email:</strong> test&#64;civica.ro</li>
                   <li><strong>Password:</strong> password123</li>
                 </ul>
                 <button nz-button nzType="link" nzSize="small" (click)="fillDemoCredentials()">

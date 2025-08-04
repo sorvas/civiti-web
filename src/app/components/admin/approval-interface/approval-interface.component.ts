@@ -82,7 +82,7 @@ import {
                 [nzValue]="adminStats.pendingReview"
                 nzTitle="Pending Review"
                 [nzPrefix]="statIcons.pending"
-                nzValueStyle="color: #FCA311">
+                [nzValueStyle]="{ color: '#FCA311' }">
               </nz-statistic>
             </nz-card>
           </div>
@@ -93,7 +93,7 @@ import {
                 [nzValue]="adminStats.approvedToday"
                 nzTitle="Approved Today"
                 [nzPrefix]="statIcons.approved"
-                nzValueStyle="color: #28A745">
+                [nzValueStyle]="{ color: '#28A745' }">
               </nz-statistic>
             </nz-card>
           </div>
@@ -105,7 +105,7 @@ import {
                 nzSuffix="%"
                 nzTitle="Approval Rate"
                 [nzPrefix]="statIcons.rate"
-                nzValueStyle="color: #14213D">
+                [nzValueStyle]="{ color: '#14213D' }">
               </nz-statistic>
             </nz-card>
           </div>
@@ -117,7 +117,7 @@ import {
                 nzSuffix="h"
                 nzTitle="Avg Review Time"
                 [nzPrefix]="statIcons.time"
-                nzValueStyle="color: #6c757d">
+                [nzValueStyle]="{ color: '#6c757d' }">
               </nz-statistic>
             </nz-card>
           </div>
@@ -232,7 +232,7 @@ import {
         nzClass="approval-modal">
         
         <div *nzModalContent>
-          <div class="modal-content" nz-spin [nzSpinning]="isProcessing">
+          <div class="modal-content" nz-spin [nzSpinning]="isProcessing || false">
             
             <!-- Issue Details -->
             <div class="issue-details" *ngIf="selectedIssue">

@@ -64,6 +64,16 @@ export const logout = createAction('[Auth] Logout');
 
 export const loadUserFromStorage = createAction('[Auth] Load User from Storage');
 
+export const loadUserFromStorageSuccess = createAction(
+  '[Auth] Load User from Storage Success',
+  props<{ user: AuthUser; token: string; refreshToken: string }>()
+);
+
+export const loadUserFromStorageFailure = createAction(
+  '[Auth] Load User from Storage Failure',
+  props<{ error: string }>()
+);
+
 export const clearAuthError = createAction('[Auth] Clear Auth Error');
 
 export const checkAuthStatus = createAction('[Auth] Check Auth Status');

@@ -285,7 +285,7 @@ export class MockUserService {
         }
 
         // Check if user already has this badge
-        const hasBadge = data.gamification[userId].badges.some(b => b.id === badgeId);
+        const hasBadge = data.gamification[userId].badges.some((b: any) => b.id === badgeId);
         if (!hasBadge) {
           const newBadge = { ...badge, earnedAt: new Date() };
           data.gamification[userId].badges.push(newBadge);

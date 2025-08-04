@@ -19,7 +19,7 @@ export const authReducer = createReducer(
     user,
     token,
     refreshToken,
-    loginMethod: 'google',
+    loginMethod: 'google' as 'google' | 'email' | null,
     error: null
   })),
 
@@ -48,7 +48,7 @@ export const authReducer = createReducer(
     user,
     token,
     refreshToken,
-    loginMethod: 'email',
+    loginMethod: 'email' as 'google' | 'email' | null,
     error: null
   })),
 
@@ -77,7 +77,7 @@ export const authReducer = createReducer(
     user,
     token,
     refreshToken,
-    loginMethod: 'email',
+    loginMethod: 'email' as 'google' | 'email' | null,
     error: null
   })),
 
@@ -125,12 +125,31 @@ export const authReducer = createReducer(
     error: null
   })),
 
-  on(AuthActions.loadUserFromStorage, (state, { user, token, refreshToken }) => ({
+  on(AuthActions.loadUserFromStorage, (state) => ({
     ...state,
-    isAuthenticated: !!user,
+    isLoading: true,
+    error: null
+  })),
+
+  on(AuthActions.loadUserFromStorageSuccess, (state, { user, token, refreshToken }) => ({
+    ...state,
+    isAuthenticated: true,
+    isLoading: false,
     user,
     token,
     refreshToken,
-    loginMethod: user?.authProvider || null
+    loginMethod: user?.authProvider || null,
+    error: null
+  })),
+
+  on(AuthActions.loadUserFromStorageFailure, (state, { error }) => ({
+    ...state,
+    isAuthenticated: false,
+    isLoading: false,
+    error,
+    user: null,
+    token: null,
+    refreshToken: null,
+    loginMethod: null
   }))
 );

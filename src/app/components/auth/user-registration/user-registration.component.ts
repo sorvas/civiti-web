@@ -93,7 +93,7 @@ interface RegistrationData {
             <nz-step nzTitle="Preferences" nzDescription="Communication"></nz-step>
           </nz-steps>
 
-          <div nz-spin [nzSpinning]="isLoading$ | async">
+          <div nz-spin [nzSpinning]="(isLoading$ | async) || false">
             
             <!-- Error Alert -->
             <nz-alert
@@ -661,20 +661,20 @@ export class UserRegistrationComponent implements OnInit, OnDestroy {
   isCurrentStepValid(): boolean {
     switch (this.currentStep) {
       case 0:
-        return this.registrationForm.get('displayName')?.valid &&
-               this.registrationForm.get('email')?.valid &&
-               this.registrationForm.get('password')?.valid &&
-               this.registrationForm.get('confirmPassword')?.valid &&
-               !this.registrationForm.hasError('passwordMismatch');
+        return !!(this.registrationForm.get('displayName')?.valid &&
+                  this.registrationForm.get('email')?.valid &&
+                  this.registrationForm.get('password')?.valid &&
+                  this.registrationForm.get('confirmPassword')?.valid &&
+                  !this.registrationForm.hasError('passwordMismatch'));
                
       case 1:
-        return this.registrationForm.get('county')?.valid &&
-               this.registrationForm.get('city')?.valid &&
-               this.registrationForm.get('district')?.valid;
+        return !!(this.registrationForm.get('county')?.valid &&
+                  this.registrationForm.get('city')?.valid &&
+                  this.registrationForm.get('district')?.valid);
                
       case 2:
-        return this.registrationForm.get('agreeToTerms')?.valid &&
-               this.registrationForm.get('agreeToPrivacy')?.valid;
+        return !!(this.registrationForm.get('agreeToTerms')?.valid &&
+                  this.registrationForm.get('agreeToPrivacy')?.valid);
                
       default:
         return false;

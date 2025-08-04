@@ -153,17 +153,21 @@ export class AuthEffects {
         this.mockAuthService.getCurrentUser().pipe(
           map(userData => {
             if (userData) {
-              return AuthActions.loadUserFromStorage({
+              return AuthActions.loadUserFromStorageSuccess({
                 user: userData.user,
                 token: userData.token,
                 refreshToken: userData.refreshToken
               });
             }
-            return { type: '[Auth] No Stored User' };
+            return AuthActions.loadUserFromStorageFailure({ 
+              error: 'No user found in storage' 
+            });
           }),
           catchError(error => {
             console.error('Load user error:', error);
-            return of({ type: '[Auth] Load User Error' });
+            return of(AuthActions.loadUserFromStorageFailure({ 
+              error: error.message || 'Failed to load user from storage' 
+            }));
           })
         )
       )
