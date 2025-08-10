@@ -12,6 +12,8 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+import { NzSpaceModule } from 'ng-zorro-antd/space';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
@@ -38,6 +40,8 @@ import { Issue } from '../../services/mock-data.service';
     NzStatisticModule,
     NzEmptyModule,
     NzToolTipModule,
+    NzSpaceModule,
+    NzModalModule,
   ],
   templateUrl: './issues-list.component.html',
   styleUrl: './issues-list.component.scss'
@@ -45,6 +49,7 @@ import { Issue } from '../../services/mock-data.service';
 export class IssuesListComponent implements OnInit {
   private _router = inject(Router);
   private _store = inject(Store<AppState>);
+  private _modal = inject(NzModalService);
   private _imageErrorCount: Map<string, number> = new Map();
 
   issues$!: Observable<Issue[]>;
@@ -126,7 +131,27 @@ export class IssuesListComponent implements OnInit {
     this._router.navigate(['/issue', issueId]);
   }
 
-  goBack(): void {
-    this._router.navigate(['/location']);
+  navigateToLogin(): void {
+    this._router.navigate(['/auth/login'], { queryParams: { returnUrl: '/issues' } });
+  }
+
+  navigateToRegister(): void {
+    this._router.navigate(['/auth/register'], { queryParams: { returnUrl: '/issues' } });
+  }
+
+  promptToCreateIssue(): void {
+    this._modal.confirm({
+      nzTitle: 'Conectare necesară',
+      nzContent: 'Pentru a raporta o problemă, este necesar să te conectezi sau să îți creezi un cont.',
+      nzOkText: 'Conectează-te',
+      nzCancelText: 'Creează cont',
+      nzOnOk: () => {
+        this._router.navigate(['/auth/login'], { queryParams: { returnUrl: '/create-issue' } });
+      },
+      nzOnCancel: () => {
+        this._router.navigate(['/auth/register'], { queryParams: { returnUrl: '/create-issue' } });
+      },
+      nzIconType: 'user'
+    });
   }
 } 
