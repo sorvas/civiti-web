@@ -4,20 +4,36 @@ This file provides essential context for Claude agents working on the Civica pro
 
 ## 🎯 Project Overview
 
-**Civica** is a civic engagement platform for Romanian citizens to collectively pressure local authorities through coordinated email campaigns. This is a **FRONTEND-ONLY** Angular application using NgRx for state management and NG-ZORRO (Ant Design) for UI components.
+**Civica** is a civic engagement platform for Romanian citizens to collectively pressure local authorities through coordinated email campaigns. 
 
-### New Features (December 2024)
-- **User Registration System** with Google OAuth and email/password options
+### Current Project State
+- **Frontend**: ✅ READY FOR INTEGRATION - Angular application with mock services, ready to connect to backend
+- **Backend**: 🚧 IN DEVELOPMENT - .NET 9 Minimal API with Supabase Auth and PostgreSQL/MongoDB
+
+The frontend is feature-complete with mock services but will continue to evolve as we:
+- Integrate with the real backend API
+- Add new features based on backend capabilities
+- Refine UI/UX based on real data and user feedback
+- Optimize performance with actual API responses
+
+### Completed Features (December 2024)
+- **User Registration System** with Google OAuth and email/password options (mocked)
 - **Issue Creation Workflow** where registered users can report civic issues
 - **AI-Enhanced Descriptions** (mocked) for issue text generation
 - **Gamification System** with points, badges, and achievements
 - **Admin Approval Interface** for issue moderation
 
+### Backend Tech Stack (Next Phase)
+- **.NET 9 Minimal API** with C# 13
+- **Supabase Auth** for authentication
+- **PostgreSQL** (primary) or MongoDB
+- **Railway** for deployment
+
 ## 📁 Critical Documentation Structure
 
 **ALWAYS consult these files in order:**
 
-1. **`docs/project/Implementation.md`** - Mandatory implementation standards and rules
+1. **`docs/project/Implementation.md`** - Mandatory implementation standards, rules, and backend architecture
 2. **`docs/design/ux.md`** - User journey specifications and flow requirements  
 3. **`docs/design/Colour-Scheme.md`** - Color palette with CSS/SCSS variables
 4. **`docs/design/Typography-Guide.md`** - Fira Sans implementation standards
@@ -31,21 +47,61 @@ This file provides essential context for Claude agents working on the Civica pro
 **New Feature Documentation:**
 - **`docs/design/user-registration-ux-research.md`** - UX research for user system
 - **`docs/design/user-registration-ui-design.md`** - UI specifications for new features
-- **`docs/IMPLEMENTATION-UPDATE.md`** - Implementation details for December 2024 update
 
 ### Documentation Update Protocol
 
-When making significant changes:
-1. Update relevant documentation IMMEDIATELY
-2. Keep all docs synchronized with code changes
-3. Use Task tool to track documentation updates
-4. Validate documentation accuracy before committing
+**MANDATORY for ALL agents**: Documentation is a living part of the codebase and MUST be maintained.
+
+When making ANY changes:
+1. **Update existing MD files** in the `docs/` folder immediately after code changes
+2. **Create new documentation** if no suitable file exists for your changes
+3. **Keep all docs synchronized** - if your change affects multiple areas, update all relevant docs
+4. **Use Task tool** to track documentation updates as part of your workflow
+5. **Validate accuracy** before committing - documentation must match implementation
+
+#### Documentation Structure
+```
+docs/
+├── project/           # Project-wide documentation (Implementation.md, etc.)
+├── design/           # UX/UI specifications and design decisions
+├── technical/        # Technical guides and architecture docs
+├── guides/           # How-to guides and tutorials
+├── api/              # API documentation (to be created for backend)
+└── deployment/       # Deployment and operations docs (to be created)
+```
+
+#### When to Update vs Create New Documentation
+**Update existing files when:**
+- Adding features to existing components
+- Modifying existing workflows
+- Changing implementation details
+- Updating technical specifications
+
+**Create new files when:**
+- Adding entirely new systems or modules
+- Documenting new architectural decisions
+- Creating guides for new processes
+- Adding API endpoint documentation
+
+**File naming convention**: Use kebab-case (e.g., `backend-api-design.md`, `supabase-integration-guide.md`)
 
 ## 🚦 Development Workflow with Agents
 
 ### Primary Agents for Civica Development
 
 ```yaml
+# Backend Development Team
+backend-architect:
+  Purpose: "Design backend architecture and development plans"
+  Use for: API design, database schema, integration planning, development roadmap
+  Workflow: Creates comprehensive plans for csharp-expert to implement
+
+csharp-expert:
+  Purpose: "Implement .NET 9 Minimal API backend"
+  Use for: Writing C# code, implementing endpoints, Supabase integration, database operations
+  Workflow: Follows plans from backend-architect, implements actual backend code
+
+# Frontend Development Team  
 frontend-developer:
   Purpose: "Build UI components with NG-ZORRO"
   Use for: Component implementation, responsive design, Angular patterns
@@ -57,15 +113,17 @@ ui-designer:
 ux-researcher:
   Purpose: "Validate implementations against ux.md"
   Use for: User flow validation, usability testing, UX compliance
-  
-backend-architect:
-  Purpose: "Design mock services and data models"
-  Use for: Service architecture, TypeScript interfaces, state design
-  
+
+# Quality & Testing Team
 test-writer-fixer:
   Purpose: "Comprehensive test coverage"
-  Use for: Unit tests, integration tests, E2E tests
+  Use for: Unit tests, integration tests, E2E tests, API tests
   
+performance-benchmarker:
+  Purpose: "Performance optimization and monitoring"
+  Use for: Load testing, query optimization, bundle size reduction
+
+# Support Agents
 rapid-prototyper:
   Purpose: "Quick MVP features and experiments"
   Use for: New feature scaffolding, proof of concepts
@@ -73,6 +131,10 @@ rapid-prototyper:
 brand-guardian:
   Purpose: "Ensure Civica brand consistency"
   Use for: Color compliance, typography standards, visual identity
+
+devops-automator:
+  Purpose: "CI/CD and deployment automation"
+  Use for: Railway deployment, GitHub Actions, monitoring setup
 ```
 
 ### Supporting Agents
@@ -80,9 +142,6 @@ brand-guardian:
 ```yaml
 mobile-app-builder:
   Use for: Mobile-specific optimizations, touch interactions
-  
-performance-benchmarker:
-  Use for: Load time optimization, bundle size reduction
   
 workflow-optimizer:
   Use for: Improving development processes, CI/CD setup
@@ -92,30 +151,70 @@ visual-storyteller:
   
 whimsy-injector:
   Use for: Adding delightful micro-interactions, polish
+
+romanian-translator:
+  Use for: Translating UI elements, ensuring proper Romanian localization
 ```
 
-### Example Multi-Agent Workflows
+### Backend Development Workflow
 
-#### New Feature Implementation
+#### Phase 1: Architecture & Planning
 ```bash
-# Complex feature requiring multiple agents
-"Implement issue detail page with gallery and email modal:
-- Use ui-designer agent to create visual designs
-- Use frontend-developer agent to implement components
-- Use ux-researcher agent to validate against ux.md
-- Use test-writer-fixer agent for test coverage
-- Use brand-guardian agent to ensure color/typography compliance
-Run these in parallel where possible"
+# Backend architecture planning
+"Use backend-architect agent to:
+1. Analyze Implementation.md backend requirements
+2. Design detailed API specification
+3. Create database schema with migrations
+4. Plan Supabase Auth integration
+5. Define Railway deployment strategy
+6. Create development roadmap for csharp-expert"
 ```
 
-#### UI Polish Pass
+#### Phase 2: Core Implementation
 ```bash
-# Improving existing UI
-"Polish the issues list page:
-- Use visual-storyteller agent to improve issue card narratives
-- Use whimsy-injector agent to add hover effects and transitions
-- Use performance-benchmarker agent to ensure smooth animations
-- Use mobile-app-builder agent to optimize touch targets"
+# Backend implementation by csharp-expert
+"Use csharp-expert agent to implement based on backend-architect's plan:
+1. Create .NET 9 Minimal API project structure
+2. Implement Supabase Auth integration
+3. Build core API endpoints (auth, issues, users, admin)
+4. Set up PostgreSQL with Entity Framework Core
+5. Implement business logic and validation
+6. Add comprehensive error handling"
+```
+
+#### Phase 3: Testing & Optimization
+```bash
+# Quality assurance workflow
+"Coordinate multiple agents:
+- Use test-writer-fixer to create API tests
+- Use performance-benchmarker for load testing
+- Use csharp-expert to fix any issues
+- Use devops-automator for deployment setup"
+```
+
+### Frontend-Backend Integration Workflow
+
+```bash
+# Continuous integration approach
+"As backend endpoints become available:
+1. Use frontend-developer to update services incrementally
+2. Replace mock calls with real API calls one at a time
+3. Add error handling for real-world scenarios
+4. Update UI based on actual API responses
+5. Use test-writer-fixer for integration tests
+6. Iterate based on findings"
+```
+
+### Frontend Enhancement Workflow
+
+```bash
+# Frontend continues to evolve
+"While backend is being developed:
+1. Use ui-designer to refine components based on feedback
+2. Use frontend-developer to add new features
+3. Use performance-benchmarker to optimize
+4. Use ux-researcher to validate improvements
+5. Keep mock services updated for unimplemented endpoints"
 ```
 
 ## 🎨 Design System Enforcement
@@ -137,16 +236,12 @@ Run these in parallel where possible"
 ```
 
 ### Component Library
-**MUST use NG-ZORRO components** - No custom components unless absolutely necessary:
-- `nz-select` for dropdowns
-- `nz-card` for issue cards
-- `nz-modal` for email templates
-- `nz-button` for all buttons
-- `nz-form` for all forms
+**Frontend**: NG-ZORRO components exclusively
+**Backend**: .NET 9 Minimal API patterns
 
 ## 🏗️ Project Architecture
 
-### Current Structure
+### Frontend Structure (Ready for Integration)
 ```
 src/app/
 ├── components/        # UI components (NG-ZORRO based)
@@ -155,251 +250,243 @@ src/app/
 │   ├── issue-creation/ # Multi-step issue creation wizard
 │   ├── admin/        # Admin approval interface
 │   └── ...existing components
-├── services/         # Mock data services ONLY
-│   ├── mock-auth.service.ts    # JWT authentication (mock)
-│   ├── mock-user.service.ts    # User profile & gamification
-│   ├── mock-issue-creation.service.ts # Issue creation with AI
-│   ├── mock-admin.service.ts   # Admin workflows
-│   └── ...existing services
-├── store/           # NgRx state management
-│   ├── auth/        # Authentication state
-│   ├── user/        # User profile & gamification state
-│   ├── issues/      # Enhanced issue state
-│   ├── location/    # Location state
-│   └── ui/          # UI state
-└── config/          # Mock configuration
+├── services/         # Mock services being replaced with real API calls
+├── store/           # NgRx state management (will add new actions/effects)
+└── config/          # Environment configuration for API endpoints
 ```
 
-### State Management
-- **NgRx** for all state management
-- **Effects** for side effects and async operations
-- **Selectors** for computed state
-- **Actions** follow pattern: `[Source] Event`
+### Backend Structure (To Be Implemented)
+```
+Civica.Api/
+├── Program.cs          # Minimal API entry point
+├── Endpoints/          # API endpoint definitions
+│   ├── AuthEndpoints.cs
+│   ├── IssueEndpoints.cs
+│   ├── UserEndpoints.cs
+│   └── AdminEndpoints.cs
+├── Services/           # Business logic
+├── Models/            # Domain models
+├── Data/              # EF Core context and migrations
+└── Infrastructure/    # Cross-cutting concerns
+```
 
 ## ⚠️ Critical Rules
 
-### FRONTEND ONLY
-- ❌ NO backend implementation
-- ❌ NO real API calls
-- ❌ NO authentication (mock only - JWT simulation in localStorage)
-- ❌ NO database connections
-- ✅ ALL data from mock services
-- ✅ Hardcoded location data (Bucharest, Sector 5)
-- ✅ Mock AI text generation for issue descriptions
-- ✅ LocalStorage for data persistence in development
+### Current Phase Rules
+- ✅ Frontend is READY - Continue development as needed while integrating
+- 🚧 Backend development is ACTIVE - Building API to replace mock services
+- 🔄 Integration is ITERATIVE - Frontend and backend evolve together
+- 📝 Documentation must be updated with all changes
 
-### Implementation Standards
-1. **Read documentation BEFORE coding**
-2. **Use NG-ZORRO components exclusively**
-3. **Apply Civica theme to ALL components**
-4. **Follow ux.md user journey exactly**
-5. **Test with Romanian text (diacritics)**
+### Backend Development Rules
+- ✅ Use .NET 9 Minimal API patterns
+- ✅ Integrate Supabase for authentication
+- ✅ Use PostgreSQL with Entity Framework Core
+- ✅ Deploy to Railway platform
+- ✅ Follow RESTful API design
+- ✅ Implement comprehensive error handling
+- ✅ Add OpenAPI/Swagger documentation
+
+### Integration Rules
+- ⚠️ Maintain API contracts defined in Implementation.md
+- ⚠️ Preserve all frontend functionality
+- ⚠️ Ensure backward compatibility
+- ⚠️ Test thoroughly before replacing mocks
 
 ## 🔧 Agent-Specific Instructions
 
-### For frontend-developer Agent
-- Focus on NG-ZORRO component implementation
-- Apply Civica theme from Colour-Scheme.md
-- Implement Fira Sans from Typography-Guide.md
-- Create responsive, mobile-first designs
-- Follow Angular best practices and conventions
-
-### For ui-designer Agent
-- Design components that align with Civica brand
-- Create consistent hover states and interactions
-- Ensure visual hierarchy supports user goals
-- Design for both desktop and mobile viewports
-
 ### For backend-architect Agent
-- Design mock services with proper TypeScript interfaces
-- Simulate realistic API delays (300-700ms)
-- Structure data models for future backend integration
-- NO real API implementations
+- Study Implementation.md backend architecture section
+- Design comprehensive development plan
+- Consider Supabase Auth integration patterns
+- Plan database schema with relationships
+- Define clear API contracts
+- Create actionable tasks for csharp-expert
+- **Documentation**: Create `docs/api/api-design.md` for API specifications
+- **Documentation**: Update Implementation.md with architectural decisions
+
+### For csharp-expert Agent
+- Follow backend-architect's development plan
+- Use .NET 9 Minimal API best practices
+- Implement async/await patterns throughout
+- Use dependency injection properly
+- Follow C# 13 conventions
+- Write clean, maintainable code
+- Add XML documentation comments
+- **Documentation**: Create/update `docs/api/endpoints/` for each endpoint group
+- **Documentation**: Create `docs/technical/backend-setup.md` for development setup
+- **Documentation**: Update Implementation.md with implementation progress
+
+### For frontend-developer Agent
+- Continue adding features and improvements as needed
+- Replace mock services incrementally as backend endpoints become available
+- Add proper error handling for real API scenarios
+- Update components based on actual API response structures
+- Optimize based on real-world performance data
+- Maintain backward compatibility with mock services for unimplemented endpoints
+- Keep environment configurations updated
+- **Documentation**: Update component documentation in relevant design docs
+- **Documentation**: Create `docs/technical/frontend-backend-integration.md` when starting integration
+- **Documentation**: Update ux.md if user flows change
 
 ### For test-writer-fixer Agent
-- Test NG-ZORRO component integration
-- Validate color and typography application
-- Test mock service functionality
-- Ensure Romanian diacritics display correctly
-- Write E2E tests for complete user journeys
+- Create API integration tests
+- Test Supabase Auth flows
+- Validate data persistence
+- Check error handling
+- Ensure Romanian text support
+- **Documentation**: Create `docs/technical/testing-strategy.md` for test approach
+- **Documentation**: Update Implementation.md testing checklist
+- **Documentation**: Document test scenarios in `docs/api/test-cases/`
 
-### For ux-researcher Agent
-- Validate all implementations against ux.md
-- Ensure user journey flows correctly
-- Check mobile responsiveness
-- Verify email counter prominence
-- Test 3-minute goal for email sending
+### For devops-automator Agent
+- Set up Railway deployment
+- Configure GitHub Actions
+- Implement health checks
+- Set up monitoring
+- Plan rollback strategies
+- **Documentation**: Create `docs/deployment/railway-setup.md`
+- **Documentation**: Create `docs/deployment/ci-cd-pipeline.md`
+- **Documentation**: Document environment variables in `docs/deployment/configuration.md`
 
-### For brand-guardian Agent
-- Enforce color palette from Colour-Scheme.md
-- Validate typography from Typography-Guide.md
-- Ensure consistent visual language
-- Check logo and brand asset usage
+## 📋 Common Backend Tasks
 
-### For rapid-prototyper Agent
-- Quickly scaffold new features
-- Create proof of concepts for user testing
-- Build MVPs following documentation
-- Focus on core functionality first
-
-## 📋 Common Tasks & Solutions
-
-### Creating a New Component
-```typescript
-// ALWAYS:
-1. Check ux.md for requirements
-2. Import NG-ZORRO modules
-3. Apply Civica theme classes
-4. Use mock data service
-5. Add proper TypeScript types
+### Creating API Endpoints
+```csharp
+// Minimal API pattern
+app.MapGet("/api/issues", async (IIssueService service) =>
+{
+    var issues = await service.GetAllAsync();
+    return Results.Ok(issues);
+})
+.RequireAuthorization()
+.WithName("GetIssues")
+.WithOpenApi();
 ```
 
-### Styling Components
-```scss
-// ALWAYS use CSS variables
-.component {
-  color: var(--oxford-blue);
-  background: var(--white);
-  
-  .cta-button {
-    background: var(--orange-web);
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-}
+### Supabase Auth Integration
+```csharp
+// JWT validation middleware
+builder.Services.AddAuthentication()
+    .AddJwtBearer(options =>
+    {
+        options.Authority = builder.Configuration["Supabase:Url"];
+        options.Audience = builder.Configuration["Supabase:AnonKey"];
+    });
 ```
 
-### Mock Data Pattern
-```typescript
-// All services MUST follow this pattern
-getIssues(): Observable<Issue[]> {
-  return of(this.mockIssues).pipe(
-    delay(500), // Simulate network delay
-    tap(() => console.log('[MOCK] Issues fetched'))
-  );
+### Database Operations
+```csharp
+// Entity Framework Core pattern
+public class IssueService : IIssueService
+{
+    private readonly CivicaDbContext _context;
+    
+    public async Task<Issue> CreateAsync(CreateIssueDto dto)
+    {
+        var issue = new Issue { /* mapping */ };
+        _context.Issues.Add(issue);
+        await _context.SaveChangesAsync();
+        return issue;
+    }
 }
 ```
 
 ## 🚀 Quick Command Reference
 
 ```bash
-# Analyze codebase with documentation
-/analyze @docs/project/Implementation.md @docs/design/ux.md --comprehensive --c7
+# Backend architecture planning
+"Use backend-architect agent to design the complete backend architecture based on Implementation.md"
 
-# Build new features with appropriate agent
-"Use frontend-developer agent to implement issue cards with NG-ZORRO"
+# Backend implementation
+"Use csharp-expert agent to implement the authentication endpoints with Supabase"
 
-# UI design tasks
-"Use ui-designer agent to create consistent hover states for all interactive elements"
+# API testing
+"Use test-writer-fixer agent to create integration tests for all API endpoints"
 
-# Test implementation
-"Use test-writer-fixer agent to add E2E tests for email sending flow"
+# Performance testing
+"Use performance-benchmarker agent to load test the API endpoints"
 
-# Brand compliance check
-"Use brand-guardian agent to audit color and typography usage"
+# Deployment setup
+"Use devops-automator agent to set up Railway deployment pipeline"
 
-# Performance optimization
-"Use performance-benchmarker agent to optimize initial load time"
+# Frontend integration prep
+"Use frontend-developer agent to prepare services for backend integration"
 ```
 
-### New Feature Routes
-- `/auth/register` - Registration gateway
-- `/auth/login` - Login page
-- `/dashboard` - User dashboard (protected)
-- `/create-issue` - Issue creation wizard (protected)
-- `/admin/approval` - Admin interface
+### API Endpoints (To Be Implemented)
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/refresh` - Token refresh
+- `GET /api/issues` - Get all issues
+- `POST /api/issues` - Create new issue
+- `GET /api/issues/{id}` - Get issue details
+- `PUT /api/issues/{id}/email-sent` - Track email sent
+- `GET /api/user/profile` - Get user profile
+- `PUT /api/user/profile` - Update profile
+- `GET /api/admin/pending-issues` - Admin: get pending
+- `PUT /api/admin/issues/{id}/approve` - Admin: approve
+- `PUT /api/admin/issues/{id}/reject` - Admin: reject
 
-### Test Credentials
-- Email: `test@civica.ro`
-- Password: `password123`
+### Environment Variables (Railway)
+```env
+DATABASE_URL=postgresql://...
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_ANON_KEY=xxx
+SUPABASE_SERVICE_KEY=xxx
+JWT_SECRET=xxx
+```
 
-### Mock Service Patterns
-All new mock services follow the same pattern with:
-- 300-700ms simulated delays
-- LocalStorage for persistence
-- Console logging with `[MOCK]` prefix
-- Realistic data structures matching planned backend
+## 📝 Documentation Requirements for ALL Agents
+
+**EVERY agent MUST maintain documentation**:
+1. **Before starting work**: Check if relevant documentation exists in `docs/`
+2. **During development**: Track what documentation needs updating
+3. **After completing work**: Update all affected documentation
+4. **If documentation is missing**: Create new files in the appropriate `docs/` subfolder
+
+**Documentation is NOT optional** - it's part of the definition of "done" for any task.
 
 ## 📊 Success Metrics
 
-Before marking ANY task complete, verify:
-- [ ] Colors match Colour-Scheme.md exactly
-- [ ] Typography follows Typography-Guide.md
-- [ ] User flow matches ux.md specifications
-- [ ] All UI uses NG-ZORRO components
-- [ ] Mobile view is optimized
-- [ ] Email counter is prominently styled (large, orange)
-- [ ] Mock data services are properly typed
-- [ ] No real API calls exist
-- [ ] 3-minute email sending goal is achievable
-- [ ] Romanian diacritics display correctly
-- [ ] Documentation is updated if needed
+### Backend Development Checklist
+- [ ] All API endpoints implemented
+- [ ] Supabase Auth fully integrated
+- [ ] Database schema matches design
+- [ ] All tests passing (unit + integration)
+- [ ] API documentation complete in `docs/api/`
+- [ ] Performance benchmarks met
+- [ ] Security best practices followed
+- [ ] Railway deployment working
+- [ ] Monitoring in place
+- [ ] Error handling comprehensive
+- [ ] **All documentation updated**
 
-## 🎯 User Journey Implementation Checklist
+### Integration Checklist
+- [ ] Frontend connects to real API
+- [ ] Authentication flow works end-to-end
+- [ ] Data persistence verified
+- [ ] File uploads working
+- [ ] Real-time features functional
+- [ ] Performance acceptable
+- [ ] No regressions from mock version
+- [ ] **Integration guide created in docs/**
 
-### Original Flows (Anonymous Users)
-
-1. **Entry & Location Selection**
-   - [ ] Pre-selected Bucharest, Sector 5
-   - [ ] Clean, simple interface
-   - [ ] Clear Continue button
-
-2. **Issues Discovery**
-   - [ ] Issue cards with photos
-   - [ ] Email counter prominent
-   - [ ] Sort/filter functionality
-   - [ ] Hover effects on cards
-
-3. **Issue Detail View**
-   - [ ] Photo gallery (main + thumbnails)
-   - [ ] Interactive map
-   - [ ] Full description sections
-   - [ ] Statistics bar with email count
-   - [ ] Authority buttons
-
-4. **Email Generation**
-   - [ ] Modal with user input fields
-   - [ ] Pre-filled email template
-   - [ ] Copy buttons for each section
-   - [ ] Clear instructions
-
-5. **Post-Email Actions**
-   - [ ] Success feedback
-   - [ ] Email counter updates
-   - [ ] Option to contact another authority
-
-### New Flows (Registered Users)
-
-6. **User Registration**
-   - [ ] Google OAuth integration (mocked)
-   - [ ] Email/password registration form
-   - [ ] Progressive profiling
-   - [ ] Welcome flow with gamification intro
-
-7. **User Dashboard**
-   - [ ] Gamification stats (points, level, badges)
-   - [ ] Recent activity
-   - [ ] Quick actions for issue creation
-   - [ ] Achievement progress
-
-8. **Issue Creation (4-step wizard)**
-   - [ ] Issue type selection with icons
-   - [ ] Photo upload with AI guidance
-   - [ ] AI-enhanced description generation
-   - [ ] Location confirmation and review
-
-9. **Admin Approval**
-   - [ ] Pending issues queue
-   - [ ] Detailed review interface
-   - [ ] Approve/reject/request changes flow
-   - [ ] Template responses
+### Documentation Checklist
+- [ ] Implementation.md reflects current state
+- [ ] API endpoints documented
+- [ ] Setup guides created
+- [ ] Deployment procedures documented
+- [ ] Architecture decisions recorded
+- [ ] Test scenarios documented
 
 ## 🔄 Continuous Improvement
 
 This CLAUDE.md file should be updated whenever:
 - New patterns or conventions are established
-- Documentation structure changes
-- New agent workflows are discovered
-- Common issues or solutions are identified
+- Backend development progresses
+- Integration points are identified
+- Common issues or solutions are discovered
+- Deployment procedures change
 
 **Remember**: This file is the single source of truth for all Claude agents working on Civica. Keep it accurate and up-to-date!
