@@ -41,11 +41,15 @@
   line-height: 1.2;
 }
 
-.priority-urgent {
-  background-color: var(--orange-web) !important;
-  color: white !important;
+// Priority urgent styling with proper specificity
+.priority-urgent,
+nz-tag.priority-urgent,
+.ant-tag.priority-urgent {
+  background-color: var(--orange-web);
+  color: white;
   font-weight: 700;
   animation: pulse 2s infinite;
+  border-color: var(--orange-web);
 }
 
 @keyframes pulse {
