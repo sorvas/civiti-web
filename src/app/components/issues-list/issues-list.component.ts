@@ -140,18 +140,37 @@ export class IssuesListComponent implements OnInit {
   }
 
   promptToCreateIssue(): void {
-    this._modal.confirm({
-      nzTitle: 'Conectare necesară',
-      nzContent: 'Pentru a raporta o problemă, este necesar să te conectezi sau să îți creezi un cont.',
-      nzOkText: 'Conectează-te',
-      nzCancelText: 'Creează cont',
-      nzOnOk: () => {
-        this._router.navigate(['/auth/login'], { queryParams: { returnUrl: '/create-issue' } });
-      },
-      nzOnCancel: () => {
-        this._router.navigate(['/auth/register'], { queryParams: { returnUrl: '/create-issue' } });
-      },
-      nzIconType: 'user'
+    this._modal.create({
+      nzTitle: 'Conectare necesară pentru crearea unei probleme',
+      nzContent: 'Pentru a raporta o problemă nouă, este necesar să ai un cont. Poți să te conectezi dacă ai deja unul sau să îți creezi un cont nou.',
+      nzFooter: [
+        {
+          label: 'Mai târziu',
+          type: 'text',
+          onClick: () => {
+            // Modal closes automatically
+          }
+        },
+        {
+          label: 'Am deja cont',
+          type: 'default',
+          onClick: () => {
+            this._router.navigate(['/auth/login'], { queryParams: { returnUrl: '/create-issue' } });
+            return Promise.resolve();
+          }
+        },
+        {
+          label: 'Creează cont nou',
+          type: 'primary',
+          onClick: () => {
+            this._router.navigate(['/auth/register'], { queryParams: { returnUrl: '/create-issue' } });
+            return Promise.resolve();
+          }
+        }
+      ],
+      nzIconType: 'user',
+      nzWidth: 500,
+      nzCentered: true
     });
   }
 } 
