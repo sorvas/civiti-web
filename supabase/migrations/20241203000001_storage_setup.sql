@@ -10,15 +10,18 @@
 
 -- Create the issue-photos bucket with configuration
 -- Using ON CONFLICT to make this migration idempotent
+-- Bucket is public for read access (approved issues are shared publicly)
+-- RLS policies control write/delete operations
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'issue-photos',
   'issue-photos',
-  false,  -- Private bucket with RLS
+  true,   -- Public bucket for read access (getPublicUrl works)
   10485760,  -- 10MB file size limit
   ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/gif']
 )
 ON CONFLICT (id) DO UPDATE SET
+  public = EXCLUDED.public,
   file_size_limit = EXCLUDED.file_size_limit,
   allowed_mime_types = EXCLUDED.allowed_mime_types;
 
@@ -41,8 +44,9 @@ WITH CHECK (
   (storage.foldername(name))[1] = auth.uid()::text
 );
 
--- Policy: Anyone can view photos (for sharing approved issues publicly)
--- This allows anonymous access to view photos
+-- Policy: Anyone can view photos via Supabase client (list, download operations)
+-- Note: For public buckets, direct URL access (getPublicUrl) works without this policy.
+-- This policy enables programmatic access via Supabase client for anon/authenticated users.
 CREATE POLICY "Public can view photos"
 ON storage.objects FOR SELECT TO anon, authenticated
 USING (bucket_id = 'issue-photos');

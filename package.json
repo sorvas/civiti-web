@@ -13,7 +13,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:Civica": "node dist/Civica/server/server.mjs",
-    "supabase:link": "npx supabase link --project-ref cmkznjhbwmcgtbnynkft",
+    "supabase:link": "node scripts/supabase-link.js",
     "supabase:push": "npx supabase db push",
     "supabase:status": "npx supabase db remote status",
     "supabase:diff": "npx supabase db diff --schema storage"
