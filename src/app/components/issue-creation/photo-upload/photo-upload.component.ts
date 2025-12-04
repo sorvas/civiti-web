@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, from, forkJoin, of } from 'rxjs';
+import { takeUntil, first, switchMap, catchError, finalize } from 'rxjs/operators';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -14,8 +14,13 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzTypographyModule } from 'ng-zorro-antd/typography';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzGridModule } from 'ng-zorro-antd/grid';
+import { NzProgressModule } from 'ng-zorro-antd/progress';
+
+import imageCompression from 'browser-image-compression';
 
 import { ApiService } from '../../../services/api.service';
+import { StorageService, UploadResult } from '../../../services/storage.service';
+import { SupabaseAuthService } from '../../../services/supabase-auth.service';
 import { IssueCategory } from '../../../types/civica-api.types';
 
 // Interface for category data from session storage
@@ -32,6 +37,7 @@ interface PhotoData {
   id: string;
   url: string;
   thumbnail: string;
+  storagePath: string;  // Supabase storage path for deletion
   quality: 'low' | 'medium' | 'high';
   timestamp: Date;
   metadata: {
@@ -54,26 +60,56 @@ interface PhotoData {
     NzSpinModule,
     NzTypographyModule,
     NzAlertModule,
-    NzGridModule
+    NzGridModule,
+    NzProgressModule
   ],
   templateUrl: './photo-upload.component.html',
   styleUrls: ['./photo-upload.component.scss']
 })
 export class PhotoUploadComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private currentUserId: string | null = null;
+
+  // Compression settings for optimal storage/quality balance
+  private readonly compressionOptions = {
+    maxSizeMB: 1,              // Target max 1MB per image
+    maxWidthOrHeight: 1920,    // Maintain good detail for civic issues
+    useWebWorker: true,        // Non-blocking compression
+    preserveExif: false,       // Strip GPS/device data (privacy)
+    initialQuality: 0.85,      // 85% quality - visually identical
+  };
 
   selectedCategory: IssueCategoryInfo | null = null;
   uploadedPhotos: PhotoData[] = [];
   isUploading = false;
+  isCompressing = false;
+  uploadProgress = 0;
 
   constructor(
     private router: Router,
     private message: NzMessageService,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private storageService: StorageService,
+    private authService: SupabaseAuthService
   ) {}
 
   ngOnInit(): void {
     this.loadSelectedCategory();
+    this.loadCurrentUser();
+  }
+
+  private loadCurrentUser(): void {
+    this.authService.getCurrentUser()
+      .pipe(takeUntil(this.destroy$), first())
+      .subscribe(user => {
+        if (user) {
+          this.currentUserId = user.id;
+          console.log('[PHOTO UPLOAD] User authenticated:', user.id);
+        } else {
+          console.warn('[PHOTO UPLOAD] No authenticated user, redirecting to login...');
+          this.router.navigate(['/auth/login']);
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -102,7 +138,7 @@ export class PhotoUploadComponent implements OnInit, OnDestroy {
   onFileSelected(event: Event): void {
     const target = event.target as HTMLInputElement;
     const files = target.files;
-    
+
     if (!files || files.length === 0) return;
 
     // Check if adding these files would exceed the limit
@@ -112,61 +148,116 @@ export class PhotoUploadComponent implements OnInit, OnDestroy {
     }
 
     this.isUploading = true;
-    
-    // Track number of files being processed
-    const filesToProcess = Array.from(files);
-    let processedCount = 0;
 
-    // Process each file
-    filesToProcess.forEach(file => {
-      this.processFile(file, () => {
-        processedCount++;
-        // Only set isUploading to false when all files are processed
-        if (processedCount === filesToProcess.length) {
+    // Process all files in parallel using RxJS forkJoin
+    const filesToProcess = Array.from(files);
+    const uploadObservables = filesToProcess.map(file => this.processFile(file));
+
+    forkJoin(uploadObservables)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
           this.isUploading = false;
-        }
-      });
-    });
+        })
+      )
+      .subscribe();
   }
 
-  private processFile(file: File, onComplete: () => void): void {
+  /**
+   * Process a single file: validate, compress, and upload.
+   * Returns an Observable that completes when the file is processed.
+   */
+  private processFile(file: File) {
     // Validate file type
     if (!file.type.startsWith('image/')) {
       this.message.error(`${file.name} nu este un fișier imagine valid.`);
-      onComplete(); // Call completion callback even on error
-      return;
+      return of(null);
     }
 
     // Validate file size (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
       this.message.error(`${file.name} este prea mare. Dimensiunea maximă este de 10MB.`);
-      onComplete(); // Call completion callback even on error
-      return;
+      return of(null);
     }
 
-    // Create photo data object
+    // Ensure user is authenticated
+    if (!this.currentUserId) {
+      this.message.error('Trebuie să fiți autentificat pentru a încărca fotografii.');
+      return of(null);
+    }
+
+    // Create a local preview URL while processing
+    const previewUrl = URL.createObjectURL(file);
+    const photoId = this.generatePhotoId();
+
+    // Add placeholder while compressing/uploading
     const photoData: PhotoData = {
-      id: this.generatePhotoId(),
-      url: URL.createObjectURL(file),
-      thumbnail: URL.createObjectURL(file),
+      id: photoId,
+      url: previewUrl,
+      thumbnail: previewUrl,
+      storagePath: '',  // Will be set after upload
       quality: this.analyzePhotoQuality(file),
       timestamp: new Date(),
       metadata: {
         size: file.size,
-        dimensions: { width: 800, height: 600 }, // Mock dimensions
+        dimensions: { width: 800, height: 600 },
         format: file.type
       }
     };
-
     this.uploadedPhotos.push(photoData);
-    
-    // Simulate upload delay
-    setTimeout(() => {
-      this.message.success(`Fotografia a fost încărcată cu succes (calitate ${this.getQualityLabel(photoData.quality)})`);
-      onComplete(); // Call completion callback after upload completes
-    }, 1000);
 
-    console.log('[PHOTO UPLOAD] Photo added:', photoData);
+    // Compress then upload using RxJS operators
+    return from(this.compressImage(file)).pipe(
+      switchMap(compressedFile => {
+        // Update metadata with compressed size
+        const photoIndex = this.uploadedPhotos.findIndex(p => p.id === photoId);
+        if (photoIndex !== -1) {
+          this.uploadedPhotos[photoIndex].metadata.size = compressedFile.size;
+        }
+
+        // Upload compressed file to Supabase Storage (with automatic retry)
+        return this.storageService.uploadPhotoWithRetry(this.currentUserId!, compressedFile).pipe(
+          switchMap((result: UploadResult) => {
+            // Update photo data with real URL from storage
+            const idx = this.uploadedPhotos.findIndex(p => p.id === photoId);
+            if (idx !== -1) {
+              URL.revokeObjectURL(previewUrl);
+              this.uploadedPhotos[idx] = {
+                ...this.uploadedPhotos[idx],
+                url: result.url,
+                thumbnail: result.url,
+                storagePath: result.path
+              };
+            }
+
+            this.message.success(`Fotografia a fost încărcată cu succes (calitate ${this.getQualityLabel(photoData.quality)})`);
+            console.log('[PHOTO UPLOAD] Photo uploaded to storage:', result);
+            return of(result);
+          }),
+          catchError(error => {
+            console.error('[PHOTO UPLOAD] Upload failed:', error);
+            // Remove the failed photo from the list
+            const idx = this.uploadedPhotos.findIndex(p => p.id === photoId);
+            if (idx !== -1) {
+              URL.revokeObjectURL(previewUrl);
+              this.uploadedPhotos.splice(idx, 1);
+            }
+            this.message.error(`Încărcarea fotografiei a eșuat: ${error.message || 'Eroare necunoscută'}`);
+            return of(null);
+          })
+        );
+      }),
+      catchError(error => {
+        console.error('[PHOTO UPLOAD] Compression failed:', error);
+        const idx = this.uploadedPhotos.findIndex(p => p.id === photoId);
+        if (idx !== -1) {
+          URL.revokeObjectURL(previewUrl);
+          this.uploadedPhotos.splice(idx, 1);
+        }
+        this.message.error(`Compresia imaginii a eșuat: ${error.message || 'Eroare necunoscută'}`);
+        return of(null);
+      })
+    );
   }
 
   private generatePhotoId(): string {
@@ -174,10 +265,40 @@ export class PhotoUploadComponent implements OnInit, OnDestroy {
   }
 
   private analyzePhotoQuality(file: File): 'low' | 'medium' | 'high' {
-    // Mock quality analysis based on file size
+    // Quality analysis based on file size
     if (file.size > 2000000) return 'high'; // > 2MB
     if (file.size > 500000) return 'medium'; // > 500KB
     return 'low';
+  }
+
+  /**
+   * Compress image before upload to reduce storage costs and upload time.
+   * Strips EXIF data (including GPS) for privacy.
+   */
+  private async compressImage(file: File): Promise<File> {
+    // Skip compression for small files (< 500KB) - already efficient
+    if (file.size < 500 * 1024) {
+      console.log('[PHOTO UPLOAD] Skipping compression for small file:', file.name);
+      return file;
+    }
+
+    try {
+      this.isCompressing = true;
+      const compressedFile = await imageCompression(file, this.compressionOptions);
+
+      const originalSizeKB = Math.round(file.size / 1024);
+      const compressedSizeKB = Math.round(compressedFile.size / 1024);
+      const reduction = Math.round((1 - compressedFile.size / file.size) * 100);
+
+      console.log(`[PHOTO UPLOAD] Compressed: ${originalSizeKB}KB → ${compressedSizeKB}KB (${reduction}% reduction)`);
+
+      return compressedFile;
+    } catch (error) {
+      console.warn('[PHOTO UPLOAD] Compression failed, using original:', error);
+      return file; // Fallback to original if compression fails
+    } finally {
+      this.isCompressing = false;
+    }
   }
 
   getQualityLabel(quality: string): string {
@@ -198,15 +319,32 @@ export class PhotoUploadComponent implements OnInit, OnDestroy {
   removePhoto(index: number): void {
     const photo = this.uploadedPhotos[index];
     console.log('[PHOTO UPLOAD] Remove photo:', photo.id);
-    
-    // Revoke object URL to free memory
-    URL.revokeObjectURL(photo.url);
-    if (photo.thumbnail !== photo.url) {
-      URL.revokeObjectURL(photo.thumbnail);
-    }
 
+    // Remove from local array first for immediate UI feedback
     this.uploadedPhotos.splice(index, 1);
-    this.message.info('Fotografia a fost ștearsă');
+
+    // If photo was uploaded to storage, delete it (with automatic retry)
+    if (photo.storagePath) {
+      this.storageService.deletePhotoWithRetry(photo.storagePath)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            console.log('[PHOTO UPLOAD] Photo deleted from storage:', photo.storagePath);
+            this.message.info('Fotografia a fost ștearsă');
+          },
+          error: (error) => {
+            console.error('[PHOTO UPLOAD] Failed to delete from storage:', error);
+            // Photo already removed from UI, just log the error
+            this.message.warning('Fotografia a fost eliminată local, dar ștergerea din stocare a eșuat');
+          }
+        });
+    } else {
+      // Photo was only a preview (upload failed or still in progress)
+      if (photo.url.startsWith('blob:')) {
+        URL.revokeObjectURL(photo.url);
+      }
+      this.message.info('Fotografia a fost ștearsă');
+    }
   }
 
   continueToDetails(): void {
@@ -215,18 +353,28 @@ export class PhotoUploadComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Ensure all photos have been uploaded (have storage paths)
+    const pendingUploads = this.uploadedPhotos.filter(p => !p.storagePath);
+    if (pendingUploads.length > 0) {
+      this.message.warning('Vă rugăm să așteptați finalizarea încărcării tuturor fotografiilor');
+      return;
+    }
+
     console.log('[PHOTO UPLOAD] Continuing to details with photos:', this.uploadedPhotos.length);
-    
-    // Store photos in session storage
+
+    // Store photos in session storage (now with real URLs and storage paths)
     const photosData = this.uploadedPhotos.map(photo => ({
-      ...photo,
-      // Don't store object URLs as they won't persist
+      id: photo.id,
       url: photo.url,
-      thumbnail: photo.thumbnail
+      thumbnail: photo.thumbnail,
+      storagePath: photo.storagePath,
+      quality: photo.quality,
+      timestamp: photo.timestamp,
+      metadata: photo.metadata
     }));
-    
+
     sessionStorage.setItem('civica_uploaded_photos', JSON.stringify(photosData));
-    
+
     this.router.navigate(['/create-issue/details']);
   }
 }
