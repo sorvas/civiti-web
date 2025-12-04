@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { Subject, from, forkJoin, of } from 'rxjs';
-import { takeUntil, switchMap, catchError, finalize } from 'rxjs/operators';
+import { Subject, from, merge, of } from 'rxjs';
+import { takeUntil, switchMap, catchError, finalize, toArray } from 'rxjs/operators';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -175,9 +175,13 @@ export class PhotoUploadComponent implements OnInit, OnDestroy {
     this.isUploading = true;
     const uploadObservables = filesToProcess.map(file => this.processFile(file));
 
-    forkJoin(uploadObservables)
+    // Use merge instead of forkJoin - each upload is independent
+    // forkJoin cancels all if one completes without emitting (via takeUntil)
+    // merge lets each upload complete independently, preventing orphaned files
+    merge(...uploadObservables)
       .pipe(
         takeUntil(this.destroy$),
+        toArray(),  // Wait for all to complete
         finalize(() => {
           this.isUploading = false;
         })
@@ -301,6 +305,12 @@ export class PhotoUploadComponent implements OnInit, OnDestroy {
         // Clean up the cancellation Subject
         this.ongoingUploads.delete(photoId);
         cancel$.complete();
+
+        // Revoke blob URL if still present (handles cancellation case)
+        // On success/error, blob is already revoked, but on cancel via takeUntil it's not
+        if (previewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(previewUrl);
+        }
       })
     );
   }
@@ -367,6 +377,12 @@ export class PhotoUploadComponent implements OnInit, OnDestroy {
   }
 
   removePhoto(index: number): void {
+    // Bounds check to prevent crash on rapid double-click or stale calls
+    if (index < 0 || index >= this.uploadedPhotos.length) {
+      console.warn('[PHOTO UPLOAD] Invalid index for removePhoto:', index);
+      return;
+    }
+
     const photo = this.uploadedPhotos[index];
     console.log('[PHOTO UPLOAD] Remove photo:', photo.id);
 
