@@ -186,19 +186,6 @@
               </nz-form-control>
             </nz-form-item>
 
-            <nz-form-item>
-              <nz-form-label [nzSpan]="24" nzFor="birthYear">Anul nașterii (Opțional)</nz-form-label>
-              <nz-form-control [nzSpan]="24">
-                <nz-select formControlName="birthYear" id="birthYear" 
-                  nzPlaceHolder="Selectează anul nașterii" 
-                  nzAllowClear
-                  nzShowSearch>
-                  <nz-option *ngFor="let year of birthYears" 
-                    [nzValue]="year" 
-                    [nzLabel]="year.toString()"></nz-option>
-                </nz-select>
-              </nz-form-control>
-            </nz-form-item>
           </div>
 
           <!-- Step 3: Communication Preferences -->

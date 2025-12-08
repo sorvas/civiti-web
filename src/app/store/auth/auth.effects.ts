@@ -83,7 +83,7 @@ export class AuthEffects {
   registerWithEmail$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.registerWithEmail),
-      switchMap(({ email, password, displayName, county, city, district, residenceType, birthYear }) =>
+      switchMap(({ email, password, displayName, county, city, district, residenceType }) =>
         this.authService.registerWithEmail(email, password, displayName).pipe(
           switchMap(response => {
             // After successful Supabase registration, create user profile in backend
@@ -94,8 +94,7 @@ export class AuthEffects {
               county,
               city,
               district,
-              residenceType,
-              birthYear
+              residenceType
             }).pipe(
               map(profile => AuthActions.registerWithEmailSuccess({
                 user: {

@@ -12,9 +12,10 @@ export const userReducer = createReducer(
     error: null
   })),
 
-  on(UserActions.loadUserProfileSuccess, (state, { profile }) => ({
+  on(UserActions.loadUserProfileSuccess, (state, { profile, gamification }) => ({
     ...state,
     profile,
+    gamification: gamification ?? state.gamification,
     isLoading: false,
     error: null
   })),
@@ -31,9 +32,10 @@ export const userReducer = createReducer(
     error: null
   })),
 
-  on(UserActions.updateUserProfileSuccess, (state, { profile }) => ({
+  on(UserActions.updateUserProfileSuccess, (state, { profile, gamification }) => ({
     ...state,
     profile,
+    gamification: gamification ?? state.gamification,
     isLoading: false,
     error: null
   })),
@@ -64,11 +66,11 @@ export const userReducer = createReducer(
     error
   })),
 
-  on(UserActions.updatePointsSuccess, (state, { totalPoints }) => ({
+  on(UserActions.updatePointsSuccess, (state, { earnedPoints }) => ({
     ...state,
     gamification: state.gamification ? {
       ...state.gamification,
-      points: totalPoints
+      points: state.gamification.points + earnedPoints
     } : null
   })),
 
