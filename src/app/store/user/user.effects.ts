@@ -101,22 +101,17 @@ export class UserEffects {
   );
 
   // Update Streak Effects
+  // TODO: Backend streak endpoint not implemented yet
+  // When implemented, this should POST to /api/user/streak with { streakType, increment }
+  // For now, this is a no-op that logs the intent
   updateStreak$ = createEffect(() =>
     this.actions$.pipe(
       ofType(UserActions.updateStreak),
-      switchMap(({ streakType, increment }) => {
-        console.log(`Updated ${streakType} streak by ${increment}`);
-
-        // Refresh gamification data after streak update
-        return this.apiService.getGamification().pipe(
-          map(gamification => UserActions.updateStreakSuccess({ gamification })),
-          catchError(error => {
-            console.error('Failed to update streak:', error);
-            return of({ type: '[User] Update Streak Error' });
-          })
-        );
+      tap(({ streakType, increment }) => {
+        console.warn(`[Streak] Backend endpoint not implemented. Intent: ${streakType} streak, increment: ${increment}`);
       })
-    )
+    ),
+    { dispatch: false }
   );
 
   // Load User Preferences Effects

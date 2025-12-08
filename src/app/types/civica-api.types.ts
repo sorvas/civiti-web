@@ -97,7 +97,6 @@ export interface CreateUserProfileRequest {
   city: string;
   district?: string;
   residenceType: ResidenceType;
-  birthYear?: number;
 }
 
 export interface UpdateUserProfileRequest {

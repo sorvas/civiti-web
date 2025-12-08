@@ -47,7 +47,6 @@ interface RegistrationData {
     district?: string;
   };
   residenceType: 'Apartment' | 'House' | 'Business';
-  birthYear?: number;
   communicationPrefs: {
     issueUpdates: boolean;
     communityNews: boolean;
@@ -95,8 +94,6 @@ export class UserRegistrationComponent implements OnInit, OnDestroy {
   residenceTypes = RESIDENCE_TYPES;
   showDistricts = false;
   
-  // Birth year options (18 to 100 years old)
-  birthYears: number[] = [];
 
   isLoading$!: Observable<boolean>;
   error$!: Observable<string | null>;
@@ -112,7 +109,6 @@ export class UserRegistrationComponent implements OnInit, OnDestroy {
     this.error$ = this.store.select(selectAuthError);
     this.isAuthenticated$ = this.store.select(selectIsAuthenticated);
 
-    this.initializeBirthYears();
     this.initializeForm();
   }
 
@@ -152,7 +148,6 @@ export class UserRegistrationComponent implements OnInit, OnDestroy {
       city: ['', [Validators.required]],
       district: [''],
       residenceType: ['Apartment', [Validators.required]],
-      birthYear: [null],
 
       // Step 3: Preferences
       issueUpdates: [true],
@@ -164,16 +159,6 @@ export class UserRegistrationComponent implements OnInit, OnDestroy {
     }, {
       validators: this.passwordMatchValidator
     });
-  }
-
-  private initializeBirthYears(): void {
-    const currentYear = new Date().getFullYear();
-    const minYear = currentYear - 100;
-    const maxYear = currentYear - 18;
-    
-    for (let year = maxYear; year >= minYear; year--) {
-      this.birthYears.push(year);
-    }
   }
 
   onCountyChange(countyCode: string): void {
@@ -272,8 +257,7 @@ export class UserRegistrationComponent implements OnInit, OnDestroy {
         county: selectedCounty?.name || formValue.county,
         city: formValue.city,
         district: formValue.district || undefined,
-        residenceType: formValue.residenceType,
-        birthYear: formValue.birthYear || undefined
+        residenceType: formValue.residenceType
       }));
     } else {
       // Mark all fields as touched to show validation errors
