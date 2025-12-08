@@ -41,6 +41,13 @@ export class OauthCallbackComponent implements OnInit {
       const user = session.user;
       const token = session.access_token;
 
+      // Store token in localStorage BEFORE making API calls
+      // This ensures the auth interceptor has access to the token
+      localStorage.setItem('civica_access_token', token);
+      if (session.refresh_token) {
+        localStorage.setItem('civica_refresh_token', session.refresh_token);
+      }
+
       // Fetch existing profile or create new one
       this.apiService.getUserProfile().subscribe({
         next: (profile) => {
