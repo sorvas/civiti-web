@@ -65,6 +65,7 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
   private _modalRef = inject(NzModalRef);
   private _cdr = inject(ChangeDetectorRef);
   private _destroy$ = new Subject<void>();
+  private _isDestroyed = false;
 
   @ViewChild('addressInput') addressInputRef!: ElementRef<HTMLInputElement>;
 
@@ -165,8 +166,19 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
   }
 
   ngOnDestroy(): void {
+    this._isDestroyed = true;
     this._destroy$.next();
     this._destroy$.complete();
+  }
+
+  /**
+   * Safely trigger change detection only if component is still alive.
+   * Prevents "ViewDestroyedError" in async callbacks.
+   */
+  private safeDetectChanges(): void {
+    if (!this._isDestroyed) {
+      this._cdr.detectChanges();
+    }
   }
 
   /**
@@ -185,11 +197,11 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
         this.reverseGeocode(lat, lng);
       }
 
-      this._cdr.detectChanges();
+      this.safeDetectChanges();
     } catch (error) {
       console.error('Failed to load Google Maps:', error);
       this.mapLoadError = true;
-      this._cdr.detectChanges();
+      this.safeDetectChanges();
     }
   }
 
@@ -202,6 +214,12 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
       const maxAttempts = 20;
 
       const check = async () => {
+        // Stop polling if component is destroyed
+        if (this._isDestroyed) {
+          reject(new Error('Component destroyed'));
+          return;
+        }
+
         if (typeof google !== 'undefined' && google.maps && google.maps.importLibrary) {
           try {
             await Promise.all([
@@ -282,7 +300,7 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
           this.showSuggestions = false;
         }
 
-        this._cdr.detectChanges();
+        this.safeDetectChanges();
       }
     );
   }
@@ -320,7 +338,7 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
           };
 
           console.log('[LOCATION PICKER] Selected location:', this.selectedLocation);
-          this._cdr.detectChanges();
+          this.safeDetectChanges();
         }
       }
     );
@@ -377,7 +395,7 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
           };
 
           console.log('[LOCATION PICKER] Reverse geocoded location:', this.selectedLocation);
-          this._cdr.detectChanges();
+          this.safeDetectChanges();
         }
       }
     );
@@ -444,14 +462,12 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
   }
 
   /**
-   * Hide suggestions when clicking outside
+   * Hide suggestions when clicking outside.
+   * Note: Suggestions use (mousedown) which fires before blur,
+   * so selection is processed before this hides the dropdown.
    */
   onAddressInputBlur(): void {
-    // Delay to allow click on suggestion to fire first
-    setTimeout(() => {
-      this.showSuggestions = false;
-      this._cdr.detectChanges();
-    }, 200);
+    this.showSuggestions = false;
   }
 
   /**
