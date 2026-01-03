@@ -158,6 +158,7 @@ export class PhotoUploadComponent implements OnInit, AfterViewInit, OnDestroy {
     // Clean up GLightbox instance
     if (this._lightbox) {
       this._lightbox.destroy();
+      this._lightbox = null;  // Clear reference to prevent calls on destroyed instance
     }
 
     this.destroy$.next();
