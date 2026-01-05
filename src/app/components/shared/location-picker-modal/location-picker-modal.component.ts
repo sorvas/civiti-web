@@ -453,8 +453,8 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
    * e.g., "Sectorul 5" → "Sector 5", "SECTOR 5" → "Sector 5"
    */
   private normalizeDistrict(district: string): string {
-    // Extract sector number
-    const match = district.match(/sector\w*\s*(\d)/i);
+    // Extract sector number (supports multi-digit for future expansion)
+    const match = district.match(/sector\w*\s*(\d+)/i);
     if (match) {
       return `Sector ${match[1]}`;
     }
