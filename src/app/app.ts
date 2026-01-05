@@ -36,13 +36,18 @@ export class App implements OnInit {
 
   protected title = 'Civica';
 
-  // Default route config
+  // Default route config - hideHeader true to prevent flash on cold start
   routeConfig: RouteConfig = {
     title: 'Civica',
     showBackButton: false,
     backUrl: null,
-    hideHeader: false
+    hideHeader: true
   };
+
+  constructor() {
+    // Read initial route data immediately to prevent header flash on cold start
+    this.updateRouteConfig();
+  }
 
   ngOnInit(): void {
     // Restore auth state from Supabase session on app startup
@@ -50,21 +55,23 @@ export class App implements OnInit {
 
     // Listen to route changes and update header config
     this._router.events.pipe(
-      filter(event => event instanceof NavigationEnd),
-      map(() => {
-        let route = this._activatedRoute;
-        while (route.firstChild) {
-          route = route.firstChild;
-        }
-        return route.snapshot.data;
-      })
-    ).subscribe(data => {
-      this.routeConfig = {
-        title: data['headerTitle'] || 'Civica',
-        showBackButton: data['showBackButton'] ?? false,
-        backUrl: data['backUrl'] || null,
-        hideHeader: data['hideHeader'] ?? false
-      };
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.updateRouteConfig();
     });
+  }
+
+  private updateRouteConfig(): void {
+    let route = this._activatedRoute;
+    while (route.firstChild) {
+      route = route.firstChild;
+    }
+    const data = route.snapshot.data;
+    this.routeConfig = {
+      title: data['headerTitle'] || 'Civica',
+      showBackButton: data['showBackButton'] ?? false,
+      backUrl: data['backUrl'] || null,
+      hideHeader: data['hideHeader'] ?? false
+    };
   }
 }
