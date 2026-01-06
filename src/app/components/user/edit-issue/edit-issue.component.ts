@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
-import { Subject, forkJoin, of, from } from 'rxjs';
-import { takeUntil, switchMap, finalize } from 'rxjs/operators';
+import { Subject, of, from, merge } from 'rxjs';
+import { takeUntil, switchMap, finalize, catchError, toArray } from 'rxjs/operators';
 import imageCompression from 'browser-image-compression';
 
 // NG-ZORRO imports
@@ -239,8 +239,17 @@ export class EditIssueComponent implements OnInit, OnDestroy {
           this.isUploading = false;
         })
       ).subscribe({
-        next: (newUrls) => {
-          const allPhotoUrls = [...existingPhotoUrls, ...newUrls];
+        next: (results) => {
+          // Filter out null values (failed uploads)
+          const successfulUrls = results.filter((url): url is string => url !== null);
+          const failedCount = newPhotos.length - successfulUrls.length;
+
+          if (failedCount > 0) {
+            this.message.warning(`${failedCount} fotografi${failedCount === 1 ? 'e nu a' : 'i nu au'} putut fi încărcate.`);
+          }
+
+          // Proceed with whatever uploads succeeded
+          const allPhotoUrls = [...existingPhotoUrls, ...successfulUrls];
           this.submitUpdate(allPhotoUrls);
         },
         error: (error) => {
@@ -255,10 +264,23 @@ export class EditIssueComponent implements OnInit, OnDestroy {
   private uploadNewPhotos(photos: NzUploadFile[]) {
     const uploadTasks = photos.map(photo => {
       const file = photo.originFileObj as File;
-      return this.compressAndUpload(file);
+      return this.compressAndUpload(file).pipe(
+        // Handle individual failures - return null for failed uploads
+        // This prevents orphaned files: successful uploads are collected
+        // even if some fail, and we can proceed with partial results
+        catchError(error => {
+          console.error('[EditIssue] Individual photo upload failed:', error);
+          return of(null);
+        })
+      );
     });
 
-    return forkJoin(uploadTasks);
+    // Use merge instead of forkJoin - each upload is independent
+    // forkJoin would cancel all if one fails, but photos already uploaded
+    // would become orphaned. merge lets each complete independently.
+    return merge(...uploadTasks).pipe(
+      toArray()
+    );
   }
 
   private compressAndUpload(file: File) {

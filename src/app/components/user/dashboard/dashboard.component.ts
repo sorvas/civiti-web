@@ -22,6 +22,7 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 
+import { StatusTextPipe, StatusColorPipe } from '../../../pipes/status.pipe';
 import { AppState } from '../../../store/app.state';
 import * as AuthActions from '../../../store/auth/auth.actions';
 import * as UserActions from '../../../store/user/user.actions';
@@ -39,10 +40,7 @@ import {
 } from '../../../store/user/user.state';
 import {
   BadgeResponse,
-  IssueItem,
-  IssueStatus,
-  ISSUE_STATUSES,
-  isActiveStatus
+  IssueItem
 } from '../../../types/civica-api.types';
 
 // Interface for user statistics from gamification data
@@ -83,7 +81,9 @@ import {
     NzTypographyModule,
     NzEmptyModule,
     NzDropDownModule,
-    NzMenuModule
+    NzMenuModule,
+    StatusTextPipe,
+    StatusColorPipe
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -228,36 +228,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   navigateToIssues(): void {
     this.router.navigate(['/issues']);
-  }
-
-  // Issue display helpers
-  private normalizeStatus(status: string): IssueStatus {
-    const statusMap: Record<string, IssueStatus> = {
-      'unspecified': 'Unspecified',
-      'draft': 'Draft',
-      'submitted': 'Submitted',
-      'underreview': 'UnderReview',
-      'approved': 'Approved',
-      'active': 'Active',
-      'inprogress': 'Active', // Legacy mapping
-      'resolved': 'Resolved',
-      'rejected': 'Rejected',
-      'cancelled': 'Cancelled'
-    };
-    return statusMap[status.toLowerCase()] || 'Unspecified';
-  }
-
-  getIssueDisplayStatus(status: IssueStatus | string): string {
-    const normalized = this.normalizeStatus(status);
-    return ISSUE_STATUSES[normalized] || 'Necunoscut';
-  }
-
-  getIssueStatusColor(status: IssueStatus | string): string {
-    const normalized = this.normalizeStatus(status);
-    if (isActiveStatus(normalized)) return 'processing';
-    if (normalized === 'Resolved') return 'success';
-    if (normalized === 'Rejected') return 'error';
-    return 'default';
   }
 
   viewIssueDetails(issueId: string): void {

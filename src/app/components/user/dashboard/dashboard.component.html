@@ -204,8 +204,8 @@
               <div class="mini-issue-info">
                 <h5>{{ issue.title }}</h5>
                 <div class="issue-meta">
-                  <nz-tag [nzColor]="getIssueStatusColor(issue.status)" nzMode="default">
-                    {{ getIssueDisplayStatus(issue.status) }}
+                  <nz-tag [nzColor]="issue.status | statusColor" nzMode="default">
+                    {{ issue.status | statusText }}
                   </nz-tag>
                   <span class="email-count">{{ issue.emailsSent }} email-uri</span>
                 </div>
