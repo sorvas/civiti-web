@@ -166,6 +166,13 @@ export class IssuesListComponent implements OnInit {
     this._router.navigate(['/issue', issueId]);
   }
 
+  /**
+   * Check if issue is resolved (actions should be disabled)
+   */
+  isResolved(issue: IssueItem): boolean {
+    return (issue.status || '').toLowerCase() === 'resolved';
+  }
+
   promptToCreateIssue(): void {
     // Check auth state and navigate directly if authenticated
     this.isAuthenticated$

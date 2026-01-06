@@ -347,6 +347,13 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         }
     }
 
+    /**
+     * Check if issue is resolved (email actions should be disabled)
+     */
+    isResolved(issue: IssueDetailResponse): boolean {
+        return (issue.status || '').toLowerCase() === 'resolved';
+    }
+
     goBack(): void {
         this._router.navigate(['/issues']);
     }

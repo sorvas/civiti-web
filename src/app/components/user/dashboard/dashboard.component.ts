@@ -25,6 +25,8 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { AppState } from '../../../store/app.state';
 import * as AuthActions from '../../../store/auth/auth.actions';
 import * as UserActions from '../../../store/user/user.actions';
+import * as UserIssuesActions from '../../../store/user-issues/user-issues.actions';
+import * as UserIssuesSelectors from '../../../store/user-issues/user-issues.selectors';
 import { AuthUser } from '../../../store/auth/auth.state';
 import {
   selectAuthUser,
@@ -35,7 +37,13 @@ import {
   Achievement,
   UserProfile
 } from '../../../store/user/user.state';
-import { BadgeResponse } from '../../../types/civica-api.types';
+import {
+  BadgeResponse,
+  IssueItem,
+  IssueStatus,
+  ISSUE_STATUSES,
+  isActiveStatus
+} from '../../../types/civica-api.types';
 
 // Interface for user statistics from gamification data
 interface UserStats {
@@ -96,6 +104,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   incompleteAchievements$!: Observable<Achievement[]>;
   isLoading$!: Observable<boolean>;
 
+  // User Issues Observables
+  userIssuesSummary$!: Observable<{ active: number; resolved: number; rejected: number; total: number }>;
+  recentUserIssues$!: Observable<IssueItem[]>;
+  userIssuesLoading$!: Observable<boolean>;
+  hasUserIssues$!: Observable<boolean>;
+
   // Mock data for demonstration
   mockActivity = [
     {
@@ -138,6 +152,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.recentBadges$ = this.store.select(selectRecentBadges);
     this.incompleteAchievements$ = this.store.select(selectIncompleteAchievements);
     this.isLoading$ = this.store.select(selectUserLoading);
+
+    // User Issues observables
+    this.userIssuesSummary$ = this.store.select(UserIssuesSelectors.selectUserIssuesSummary);
+    this.recentUserIssues$ = this.store.select(UserIssuesSelectors.selectRecentUserIssues);
+    this.userIssuesLoading$ = this.store.select(UserIssuesSelectors.selectUserIssuesLoading);
+    this.hasUserIssues$ = this.store.select(UserIssuesSelectors.selectHasUserIssues);
   }
 
   ngOnInit(): void {
@@ -148,6 +168,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         // loadUserProfile now returns profile WITH gamification
         this.store.dispatch(UserActions.loadUserProfile({ userId: user.id }));
         this.store.dispatch(UserActions.loadUserPreferences({ userId: user.id }));
+
+        // Load user's own issues
+        this.store.dispatch(UserIssuesActions.loadUserIssues({}));
 
         // Update login streak
         this.store.dispatch(UserActions.updateStreak({ streakType: 'login', increment: true }));
@@ -195,9 +218,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   viewMyIssues(): void {
-    // TODO: Navigate to user's issues page
-    console.log('[DASHBOARD] View My Issues clicked');
-    this.router.navigate(['/issues'], { queryParams: { filter: 'my-issues' } });
+    this.router.navigate(['/my-issues']);
   }
 
   logout(): void {
@@ -207,5 +228,44 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   navigateToIssues(): void {
     this.router.navigate(['/issues']);
+  }
+
+  // Issue display helpers
+  private normalizeStatus(status: string): IssueStatus {
+    const statusMap: Record<string, IssueStatus> = {
+      'unspecified': 'Unspecified',
+      'draft': 'Draft',
+      'submitted': 'Submitted',
+      'underreview': 'UnderReview',
+      'approved': 'Approved',
+      'active': 'Active',
+      'inprogress': 'Active', // Legacy mapping
+      'resolved': 'Resolved',
+      'rejected': 'Rejected',
+      'cancelled': 'Cancelled'
+    };
+    return statusMap[status.toLowerCase()] || 'Unspecified';
+  }
+
+  getIssueDisplayStatus(status: IssueStatus | string): string {
+    const normalized = this.normalizeStatus(status);
+    return ISSUE_STATUSES[normalized] || 'Necunoscut';
+  }
+
+  getIssueStatusColor(status: IssueStatus | string): string {
+    const normalized = this.normalizeStatus(status);
+    if (isActiveStatus(normalized)) return 'processing';
+    if (normalized === 'Resolved') return 'success';
+    if (normalized === 'Rejected') return 'error';
+    return 'default';
+  }
+
+  viewIssueDetails(issueId: string): void {
+    this.router.navigate(['/issue', issueId]);
+  }
+
+  onIssueImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = '/images/placeholders/issue-placeholder.svg';
   }
 }
