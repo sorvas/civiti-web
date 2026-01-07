@@ -183,9 +183,9 @@ export class MyIssuesComponent implements OnInit, OnDestroy {
   }
 
   getDaysSinceCreation(createdAt: string): number {
-    const created = new Date(createdAt);
     const now = new Date();
-    return Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+    const diffTime = Math.abs(now.getTime() - new Date(createdAt).getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
 
   onImageError(event: Event): void {
