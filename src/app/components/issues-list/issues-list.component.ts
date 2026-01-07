@@ -163,6 +163,11 @@ export class IssuesListComponent implements OnInit, OnDestroy {
   }
 
   onSortChange(): void {
+    // Dispatch sort change to store first
+    this._store.dispatch(IssueActions.changeSortBy({
+      sortBy: this.sortBy as 'date' | 'emails' | 'urgency'
+    }));
+
     // Update URL with new sort and reset to page 1
     this._router.navigate([], {
       relativeTo: this._route,

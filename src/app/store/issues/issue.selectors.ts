@@ -75,32 +75,5 @@ export const selectPaginationInfo = createSelector(
   })
 );
 
-// Sorted issues selector
-export const selectSortedIssues = createSelector(
-  selectAll,
-  selectSortBy,
-  (issues: IssueItem[], sortBy: string): IssueItem[] => {
-    if (!issues?.length) return [];
-
-    return [...issues].sort((a, b) => {
-      switch (sortBy) {
-        case 'emails':
-          return (b.emailsSent || 0) - (a.emailsSent || 0);
-        case 'urgency':
-          return getUrgencyScore(b) - getUrgencyScore(a);
-        case 'date':
-        default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-    });
-  }
-);
-
-// Helper function for urgency calculation
-function getUrgencyScore(issue: IssueItem): number {
-  const daysSince = Math.ceil(
-    Math.abs(new Date().getTime() - new Date(issue.createdAt).getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const emailRatio = (issue.emailsSent || 0) / 100;
-  return emailRatio + (daysSince / 10);
-}
+// Issues selector - server handles sorting, so just return as-is
+export const selectSortedIssues = selectAll;
