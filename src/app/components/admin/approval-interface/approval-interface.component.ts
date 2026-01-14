@@ -126,6 +126,17 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
           // Convert API response to component format
           this.pendingIssues = response.items;
           console.log('[ADMIN] Loaded pending issues:', this.pendingIssues.length);
+
+          // Reconcile selectedIssueIds with new data - remove stale IDs
+          const currentIds = new Set(this.pendingIssues.map(issue => issue.id));
+          const staleIds = [...this.selectedIssueIds].filter(id => !currentIds.has(id));
+          if (staleIds.length > 0) {
+            staleIds.forEach(id => this.selectedIssueIds.delete(id));
+            console.log('[ADMIN] Cleared stale selections:', staleIds.length);
+          }
+          // Update allSelected state
+          this.allSelected = this.pendingIssues.length > 0 &&
+                             this.selectedIssueIds.size === this.pendingIssues.length;
         },
         error: (error) => {
           console.error('[ADMIN] Failed to load pending issues:', error);
