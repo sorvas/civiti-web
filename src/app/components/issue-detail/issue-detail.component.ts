@@ -20,7 +20,7 @@ import { take, filter, takeUntil } from 'rxjs/operators';
 import { AppState } from '../../store/app.state';
 import * as IssueActions from '../../store/issues/issue.actions';
 import * as IssueSelectors from '../../store/issues/issue.selectors';
-import { selectIsAdmin } from '../../store/auth/auth.selectors';
+import { selectIsAdmin, selectIsAuthInitialized, selectAuthUser } from '../../store/auth/auth.selectors';
 import { IssueDetailResponse, IssueStatus } from '../../types/civica-api.types';
 import { EmailModalComponent } from './email-modal.component';
 import { GoogleMap, MapMarker, MapInfoWindow } from '@angular/google-maps';
@@ -133,18 +133,22 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         if (issueId) {
             this._store.dispatch(IssueActions.loadIssue({ id: issueId }));
 
-            // Check access control: non-admin users can only view Active/Resolved issues
+            // Check access control: wait for auth to initialize, then check permissions
+            // Users can view: Active/Resolved issues (public), their own issues, or any issue if admin
             combineLatest([
                 this.issue$.pipe(filter(issue => !!issue)),
-                this.isAdmin$
+                this._store.select(selectIsAuthInitialized).pipe(filter(initialized => initialized)),
+                this.isAdmin$,
+                this._store.select(selectAuthUser)
             ]).pipe(
                 take(1),
                 takeUntil(this._destroy$)
-            ).subscribe(([issue, isAdmin]) => {
+            ).subscribe(([issue, _initialized, isAdmin, currentUser]) => {
                 const isPubliclyViewable = this.PUBLIC_VIEWABLE_STATUSES.includes(issue.status);
+                const isOwner = currentUser?.id === issue.user.id;
 
-                if (!isPubliclyViewable && !isAdmin) {
-                    console.warn(`[ACCESS DENIED] Issue ${issue.id} has status "${issue.status}" - redirecting non-admin user`);
+                if (!isPubliclyViewable && !isAdmin && !isOwner) {
+                    console.warn(`[ACCESS DENIED] Issue ${issue.id} has status "${issue.status}" - redirecting (not owner, not admin)`);
                     this._router.navigate(['/issues']);
                     return;
                 }

@@ -276,8 +276,18 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
   }
 
   private handleDecisionSuccess(decision: 'approve' | 'reject'): void {
+    const processedIssueId = this.selectedIssue?.id;
+
     // Remove processed issue from pending list
-    this.pendingIssues = this.pendingIssues.filter(issue => issue.id !== this.selectedIssue?.id);
+    this.pendingIssues = this.pendingIssues.filter(issue => issue.id !== processedIssueId);
+
+    // Clear from bulk selection if it was selected
+    if (processedIssueId && this.selectedIssueIds.has(processedIssueId)) {
+      this.selectedIssueIds.delete(processedIssueId);
+      // Update allSelected state
+      this.allSelected = this.pendingIssues.length > 0 &&
+                         this.selectedIssueIds.size === this.pendingIssues.length;
+    }
 
     // Update stats
     if (this.adminStats) {
