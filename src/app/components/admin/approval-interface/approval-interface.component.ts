@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -22,6 +22,7 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzBadgeModule } from 'ng-zorro-antd/badge';
 import { NzTypographyModule } from 'ng-zorro-antd/typography';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 
 import { ApiService } from '../../../services/api.service';
 import {
@@ -29,62 +30,11 @@ import {
   AdminStatisticsResponse,
   ApproveIssueRequest,
   RejectIssueRequest,
+  BulkApproveRequest,
   IssueCategory,
   UrgencyLevel,
   IssueStatus
 } from '../../../types/civica-api.types';
-
-// Define local interfaces for component use
-interface AdminIssue {
-  id: string;
-  userId: string;
-  title: string;
-  description: string;
-  category: IssueCategory;
-  address: string;
-  latitude: number;
-  longitude: number;
-  locationAccuracy: number;
-  neighborhood?: string;
-  landmark?: string;
-  urgency: UrgencyLevel;
-  status: IssueStatus;
-  emailsSent: number;
-  currentSituation?: string;
-  desiredOutcome?: string;
-  communityImpact?: string;
-  aiGeneratedDescription?: string;
-  aiProposedSolution?: string;
-  aiConfidence?: number;
-  adminNotes?: string;
-  rejectionReason?: string;
-  priority: Priority;
-  assignedDepartment?: string;
-  estimatedResolutionTime?: string;
-  publicVisibility: boolean;
-  reviewedAt?: string;
-  reviewedBy?: string;
-  createdAt: string;
-  updatedAt: string;
-  photos: IssuePhoto[];
-}
-
-interface IssuePhoto {
-  id: string;
-  url: string;
-  thumbnail?: string;
-  uploadedAt: string;
-}
-
-enum Priority {
-  Unspecified = 0,
-  Low = 1,
-  Medium = 2,
-  High = 3,
-  Critical = 4
-}
-
-
 
 @Component({
   selector: 'app-approval-interface',
@@ -93,6 +43,7 @@ enum Priority {
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
+    FormsModule,
     NzCardModule,
     NzButtonModule,
     NzIconModule,
@@ -107,7 +58,8 @@ enum Priority {
     NzStatisticModule,
     NzGridModule,
     NzBadgeModule,
-    NzTypographyModule
+    NzTypographyModule,
+    NzCheckboxModule
   ],
   templateUrl: './approval-interface.component.html',
   styleUrls: ['./approval-interface.component.scss']
@@ -117,14 +69,21 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
 
   pendingIssues: AdminIssueListItem[] = [];
   adminStats: AdminStatisticsResponse | null = null;
-  departments: string[] = [];
   isLoading = false;
   isProcessing = false;
 
-  // Modal state
+  // Selection state for bulk actions
+  selectedIssueIds = new Set<string>();
+  allSelected = false;
+
+  // Single issue approval modal state
   isApprovalModalVisible = false;
   selectedIssue: AdminIssueListItem | null = null;
   approvalForm!: FormGroup;
+
+  // Bulk approval modal state
+  isBulkApprovalModalVisible = false;
+  bulkApprovalNotes = '';
 
   constructor(
     private apiService: ApiService,
@@ -152,8 +111,6 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
   private initializeForm(): void {
     this.approvalForm = this.fb.group({
       decision: ['', [Validators.required]],
-      priority: ['medium'],
-      assignedDepartment: [''],
       notes: ['']
     });
   }
@@ -169,10 +126,21 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
           // Convert API response to component format
           this.pendingIssues = response.items;
           console.log('[ADMIN] Loaded pending issues:', this.pendingIssues.length);
+
+          // Reconcile selectedIssueIds with new data - remove stale IDs
+          const currentIds = new Set(this.pendingIssues.map(issue => issue.id));
+          const staleIds = [...this.selectedIssueIds].filter(id => !currentIds.has(id));
+          if (staleIds.length > 0) {
+            staleIds.forEach(id => this.selectedIssueIds.delete(id));
+            console.log('[ADMIN] Cleared stale selections:', staleIds.length);
+          }
+          // Update allSelected state
+          this.allSelected = this.pendingIssues.length > 0 &&
+                             this.selectedIssueIds.size === this.pendingIssues.length;
         },
         error: (error) => {
           console.error('[ADMIN] Failed to load pending issues:', error);
-          this.message.error('Failed to load pending issues');
+          this.message.error('Nu s-au putut încărca problemele în așteptare');
         }
       });
 
@@ -187,25 +155,16 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('[ADMIN] Failed to load admin stats:', error);
-          this.message.error('Failed to load statistics');
+          this.message.error('Nu s-au putut încărca statisticile');
           this.isLoading = false;
         }
       });
-
-    // Load departments - for now use hardcoded list
-    this.departments = [
-      'Primăria',
-      'Poliția Locală',
-      'Serviciul Public de Salubritate',
-      'Direcția de Transport Public',
-      'Serviciul de Utilități Publice'
-    ];
   }
 
   refreshData(): void {
     console.log('[ADMIN] Refreshing data...');
     this.loadData();
-    this.message.info('Data refreshed');
+    this.message.info('Datele au fost reîmprospătate');
   }
 
   getCategoryColor(categoryId: string): string {
@@ -246,8 +205,7 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
 
   viewIssueDetails(issue: AdminIssueListItem): void {
     console.log('[ADMIN] View issue details:', issue.id);
-    // TODO: Open detailed view modal or navigate to details page
-    this.openApprovalModal(issue);
+    this.router.navigate(['/issue', issue.id]);
   }
 
   openApprovalModal(issue: AdminIssueListItem): void {
@@ -258,8 +216,6 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
     // Reset form
     this.approvalForm.reset({
       decision: '',
-      priority: 'medium',
-      assignedDepartment: '',
       notes: ''
     });
   }
@@ -278,7 +234,7 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
 
   submitDecision(): void {
     if (!this.approvalForm.valid || !this.selectedIssue) {
-      this.message.warning('Please fill in all required fields');
+      this.message.warning('Completează toate câmpurile obligatorii');
       return;
     }
 
@@ -290,12 +246,7 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
 
     if (formValue.decision === 'approve') {
       const approvalData: ApproveIssueRequest = {
-        adminNotes: formValue.notes,
-        templateEmail: {
-          subject: `Problemă aprobată: ${this.selectedIssue.title}`,
-          body: 'Problema dumneavoastră a fost aprobată și se află în proces de rezolvare.',
-          targetAuthorities: [formValue.assignedDepartment || 'Primăria']
-        }
+        adminNotes: formValue.notes || undefined
       };
 
       this.apiService.approveIssue(issueId, approvalData)
@@ -303,12 +254,12 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (result) => {
             console.log('[ADMIN] Issue approved successfully:', result);
-            this.message.success('Issue approved successfully');
+            this.message.success('Problema a fost aprobată cu succes');
             this.handleDecisionSuccess('approve');
           },
           error: (error) => {
             console.error('[ADMIN] Failed to approve issue:', error);
-            this.message.error('Failed to approve issue. Please try again.');
+            this.message.error('Aprobarea a eșuat. Încearcă din nou.');
             this.isProcessing = false;
           }
         });
@@ -323,12 +274,12 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (result) => {
             console.log('[ADMIN] Issue rejected successfully:', result);
-            this.message.success('Issue rejected successfully');
+            this.message.success('Problema a fost respinsă');
             this.handleDecisionSuccess('reject');
           },
           error: (error) => {
             console.error('[ADMIN] Failed to reject issue:', error);
-            this.message.error('Failed to reject issue. Please try again.');
+            this.message.error('Respingerea a eșuat. Încearcă din nou.');
             this.isProcessing = false;
           }
         });
@@ -336,8 +287,19 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
   }
 
   private handleDecisionSuccess(decision: 'approve' | 'reject'): void {
+    const processedIssueId = this.selectedIssue?.id;
+
     // Remove processed issue from pending list
-    this.pendingIssues = this.pendingIssues.filter(issue => issue.id !== this.selectedIssue?.id);
+    this.pendingIssues = this.pendingIssues.filter(issue => issue.id !== processedIssueId);
+
+    // Clear from bulk selection if it was selected
+    if (processedIssueId && this.selectedIssueIds.has(processedIssueId)) {
+      this.selectedIssueIds.delete(processedIssueId);
+    }
+
+    // Always recalculate allSelected after removing an issue
+    this.allSelected = this.pendingIssues.length > 0 &&
+                       this.selectedIssueIds.size === this.pendingIssues.length;
 
     // Update stats
     if (this.adminStats) {
@@ -353,5 +315,108 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
 
     this.closeApprovalModal();
     this.isProcessing = false;
+  }
+
+  // ============================================
+  // Bulk Selection Methods
+  // ============================================
+
+  toggleSelectAll(checked: boolean): void {
+    this.allSelected = checked;
+    if (checked) {
+      this.pendingIssues.forEach(issue => this.selectedIssueIds.add(issue.id));
+    } else {
+      this.selectedIssueIds.clear();
+    }
+  }
+
+  toggleIssueSelection(issueId: string, checked: boolean): void {
+    if (checked) {
+      this.selectedIssueIds.add(issueId);
+    } else {
+      this.selectedIssueIds.delete(issueId);
+    }
+    // Update allSelected state
+    this.allSelected = this.pendingIssues.length > 0 &&
+                       this.selectedIssueIds.size === this.pendingIssues.length;
+  }
+
+  isIssueSelected(issueId: string): boolean {
+    return this.selectedIssueIds.has(issueId);
+  }
+
+  get selectedCount(): number {
+    return this.selectedIssueIds.size;
+  }
+
+  // ============================================
+  // Bulk Approval Methods
+  // ============================================
+
+  openBulkApprovalModal(): void {
+    if (this.selectedIssueIds.size === 0) {
+      this.message.warning('Selectează cel puțin o problemă pentru aprobare în masă');
+      return;
+    }
+    this.bulkApprovalNotes = '';
+    this.isBulkApprovalModalVisible = true;
+  }
+
+  closeBulkApprovalModal(): void {
+    this.isBulkApprovalModalVisible = false;
+    this.bulkApprovalNotes = '';
+  }
+
+  submitBulkApproval(): void {
+    if (this.selectedIssueIds.size === 0) {
+      return;
+    }
+
+    this.isProcessing = true;
+    const request: BulkApproveRequest = {
+      issueIds: Array.from(this.selectedIssueIds),
+      adminNotes: this.bulkApprovalNotes || undefined
+    };
+
+    console.log('[ADMIN] Submitting bulk approval for', request.issueIds.length, 'issues');
+
+    this.apiService.bulkApproveIssues(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          console.log('[ADMIN] Bulk approval completed:', response);
+          this.message.success(`${response.successCount} probleme aprobate cu succes`);
+
+          if (response.failedCount > 0) {
+            this.message.warning(`${response.failedCount} probleme nu au putut fi aprobate`);
+          }
+
+          // Remove approved issues from the list
+          const approvedIds = new Set(response.results
+            .filter(r => r.success)
+            .map(r => r.issueId));
+
+          this.pendingIssues = this.pendingIssues.filter(issue => !approvedIds.has(issue.id));
+
+          // Update stats
+          if (this.adminStats) {
+            this.adminStats.pendingReview -= response.successCount;
+            this.adminStats.reviewedToday += response.successCount;
+            this.adminStats.approved += response.successCount;
+          }
+
+          // Clear selection
+          this.selectedIssueIds.clear();
+          this.allSelected = false;
+
+          this.closeBulkApprovalModal();
+          this.isProcessing = false;
+        },
+        error: (error) => {
+          console.error('[ADMIN] Bulk approval failed:', error);
+          this.message.error('Aprobarea în masă a eșuat. Încearcă din nou.');
+          this.isProcessing = false;
+        }
+      });
   }
 }
