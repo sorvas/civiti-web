@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil, take } from 'rxjs/operators';
@@ -130,5 +130,15 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
 
   clearError(): void {
     this.store.dispatch(AuthActions.clearAuthError());
+  }
+
+  get confirmPasswordValidateStatus(): AbstractControl | 'error' {
+    const control = this.resetPasswordForm.get('confirmPassword');
+    // Show error state when form has passwordMismatch error and field is touched
+    if (control?.touched && this.resetPasswordForm.hasError('passwordMismatch')) {
+      return 'error';
+    }
+    // Otherwise let ng-zorro use the control's own validation status
+    return control!;
   }
 }
