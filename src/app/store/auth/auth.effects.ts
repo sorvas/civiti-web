@@ -90,7 +90,28 @@ export class AuthEffects {
       switchMap(({ email, password, displayName, county, city, district, residenceType }) =>
         this.authService.registerWithEmail(email, password, displayName).pipe(
           switchMap(response => {
-            // After successful Supabase registration, create user profile in backend
+            // Check if email confirmation is required (no token returned)
+            if (!response.token) {
+              // Email confirmation is required - don't log user in
+              // Still create user profile in backend for when they confirm
+              return this.apiService.createUserProfile({
+                supabaseUserId: response.user.id,
+                email: response.user.email || email,
+                displayName: displayName || email.split('@')[0],
+                county,
+                city,
+                district,
+                residenceType
+              }).pipe(
+                map(() => AuthActions.registerWithEmailPendingConfirmation({ email })),
+                catchError(() => {
+                  // Profile creation failed but registration succeeded - still show confirmation message
+                  return of(AuthActions.registerWithEmailPendingConfirmation({ email }));
+                })
+              );
+            }
+
+            // Email confirmation not required - user is logged in immediately
             return this.apiService.createUserProfile({
               supabaseUserId: response.user.id,
               email: response.user.email || email,
@@ -103,8 +124,6 @@ export class AuthEffects {
               map(profile => AuthActions.registerWithEmailSuccess({
                 user: {
                   ...response.user,
-                  // Merge profile data for display (displayName, photoUrl)
-                  // Role stays from Supabase app_metadata (response.user.role)
                   displayName: profile.displayName,
                   photoUrl: profile.photoUrl ?? response.user.photoUrl
                 },
@@ -121,12 +140,23 @@ export class AuthEffects {
               })
             );
           }),
-          catchError(error => of(AuthActions.registerWithEmailFailure({ 
-            error: error.message || 'Registration failed' 
+          catchError(error => of(AuthActions.registerWithEmailFailure({
+            error: error.message || 'Registration failed'
           })))
         )
       )
     )
+  );
+
+  // Show message when email confirmation is required
+  emailConfirmationPending$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.registerWithEmailPendingConfirmation),
+      tap(({ email }) => {
+        this.message.success(`Verifică-ți email-ul (${email}) pentru a confirma contul.`);
+      })
+    ),
+    { dispatch: false }
   );
 
   // Token Refresh Effects
@@ -233,8 +263,9 @@ export class AuthEffects {
                 })
               );
             }
-            return of(AuthActions.loadUserFromStorageFailure({ 
-              error: 'No user found in storage' 
+            // No user in storage is expected for new visitors - not an error
+            return of(AuthActions.loadUserFromStorageFailure({
+              error: ''
             }));
           }),
           catchError(error => {
@@ -264,5 +295,66 @@ export class AuthEffects {
         )
       )
     )
+  );
+
+  // Password Reset Effects
+  forgotPassword$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.forgotPassword),
+      switchMap(({ email }) =>
+        this.authService.resetPassword(email).pipe(
+          map(() => AuthActions.forgotPasswordSuccess({ email })),
+          catchError(error => of(AuthActions.forgotPasswordFailure({
+            error: error.message || 'Trimiterea email-ului de resetare a eșuat'
+          })))
+        )
+      )
+    )
+  );
+
+  forgotPasswordSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.forgotPasswordSuccess),
+      tap(({ email }) => {
+        this.message.success(`Email-ul de resetare a fost trimis la ${email}`);
+      })
+    ),
+    { dispatch: false }
+  );
+
+  resetPassword$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.resetPassword),
+      switchMap(({ password }) =>
+        this.authService.updatePassword(password).pipe(
+          map(() => AuthActions.resetPasswordSuccess()),
+          catchError(error => of(AuthActions.resetPasswordFailure({
+            error: error.message || 'Actualizarea parolei a eșuat'
+          })))
+        )
+      )
+    )
+  );
+
+  resetPasswordSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.resetPasswordSuccess),
+      tap(() => {
+        this.message.success('Parola a fost schimbată cu succes!');
+        this.router.navigate(['/auth/login']);
+      })
+    ),
+    { dispatch: false }
+  );
+
+  // Handle password reset errors
+  passwordResetError$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.forgotPasswordFailure, AuthActions.resetPasswordFailure),
+      tap(({ error }) => {
+        this.message.error(error);
+      })
+    ),
+    { dispatch: false }
   );
 }
