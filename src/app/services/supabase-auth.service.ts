@@ -291,6 +291,17 @@ export class SupabaseAuthService {
   }
 
   /**
+   * Wait for auth to be ready and return the session.
+   * Used by password reset to ensure recovery token is processed.
+   */
+  getSessionOnceReady(): Observable<{ user: any; access_token: string; refresh_token?: string } | null> {
+    return this.authReady$.pipe(
+      take(1),
+      switchMap(() => from(this.getSession()))
+    );
+  }
+
+  /**
    * Get the current user from Supabase session
    * Used in OAuth callback to get authenticated user details
    */

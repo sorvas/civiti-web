@@ -104,8 +104,13 @@ export class AuthEffects {
                 residenceType
               }).pipe(
                 map(() => AuthActions.registerWithEmailPendingConfirmation({ email })),
-                catchError(() => {
-                  // Profile creation failed but registration succeeded - still show confirmation message
+                catchError((error) => {
+                  // Profile creation failed but Supabase auth succeeded
+                  // Log error with context so it can be investigated
+                  console.error('[Registration] Profile creation failed:', error);
+                  console.error('[Registration] Lost profile data:', { county, city, district, residenceType });
+                  // Show warning toast - profile can be completed after login
+                  this.message.warning('Contul a fost creat, dar profilul nu a putut fi salvat. Poți completa profilul după autentificare.');
                   return of(AuthActions.registerWithEmailPendingConfirmation({ email }));
                 })
               );
@@ -130,8 +135,11 @@ export class AuthEffects {
                 token: response.token,
                 refreshToken: response.refreshToken
               })),
-              catchError(() => {
-                // If profile creation fails, we still have a valid auth
+              catchError((error) => {
+                // Profile creation failed but auth succeeded
+                console.error('[Registration] Profile creation failed:', error);
+                console.error('[Registration] Lost profile data:', { county, city, district, residenceType });
+                this.message.warning('Profilul nu a putut fi salvat complet. Poți actualiza profilul din setări.');
                 return of(AuthActions.registerWithEmailSuccess({
                   user: response.user,
                   token: response.token,

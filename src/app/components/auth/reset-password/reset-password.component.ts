@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, take } from 'rxjs/operators';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -78,20 +78,22 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private async checkSession(): Promise<void> {
-    try {
-      // Supabase automatically handles the token from the URL hash
-      // Wait a moment for Supabase to process the recovery token
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const session = await this.supabaseAuthService.getSession();
-      this.sessionValid = !!session;
-    } catch (error) {
-      console.error('Error checking session:', error);
-      this.sessionValid = false;
-    } finally {
-      this.checkingSession = false;
-    }
+  private checkSession(): void {
+    // Wait for Supabase to process the recovery token from the URL hash
+    // Using the observable ensures we wait for auth initialization to complete
+    this.supabaseAuthService.getSessionOnceReady()
+      .pipe(take(1), takeUntil(this.destroy$))
+      .subscribe({
+        next: (session) => {
+          this.sessionValid = !!session;
+          this.checkingSession = false;
+        },
+        error: (error) => {
+          console.error('Error checking session:', error);
+          this.sessionValid = false;
+          this.checkingSession = false;
+        }
+      });
   }
 
   private initializeForm(): void {
