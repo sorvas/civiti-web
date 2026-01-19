@@ -118,7 +118,6 @@ export class MyIssuesComponent implements OnInit, OnDestroy {
       'submitted': 'Submitted',
       'underreview': 'UnderReview',
       'active': 'Active',
-      'inprogress': 'Active', // Legacy mapping
       'resolved': 'Resolved',
       'rejected': 'Rejected',
       'cancelled': 'Cancelled'

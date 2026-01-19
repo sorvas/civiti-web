@@ -158,7 +158,7 @@
                 nz-button
                 nzType="default"
                 type="button"
-                [disabled]="!detailsForm.valid || isEnhancingAI"
+                [disabled]="!detailsForm.valid || isEnhancingAI || isAIEnhanced"
                 (click)="enhanceWithAI()"
                 class="enhance-btn">
                 <span nz-icon nzType="robot" *ngIf="!isEnhancingAI"></span>
@@ -197,7 +197,7 @@
           nz-button
           nzType="primary"
           nzSize="large"
-          [disabled]="!detailsForm.valid"
+          [disabled]="!detailsForm.valid || isEnhancingAI"
           (click)="continueToReview()"
           class="nav-btn continue-btn">
           Selectează autorități

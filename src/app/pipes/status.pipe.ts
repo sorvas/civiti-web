@@ -17,7 +17,6 @@ export class StatusTextPipe implements PipeTransform {
     'submitted': 'TRIMISĂ',
     'underreview': 'ÎN REVIZUIRE',
     'active': 'ACTIVĂ',
-    'inprogress': 'ACTIVĂ', // Legacy frontend mapping
     'resolved': 'REZOLVATĂ',
     'rejected': 'RESPINSĂ',
     'cancelled': 'ANULATĂ'
@@ -49,7 +48,6 @@ export class StatusColorPipe implements PipeTransform {
       case 'underreview':
         return 'warning';
       case 'active':
-      case 'inprogress': // Legacy frontend mapping
         return 'processing';
       case 'resolved':
         return 'success';
