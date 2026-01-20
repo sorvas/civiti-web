@@ -81,7 +81,7 @@ export class OauthCallbackComponent implements OnInit {
       displayName,
       county: 'București',
       city: 'București',
-      district: 'Sector 5',
+      district: '', // User will select sector when creating issues
       residenceType: 'Apartment'
     }).subscribe({
       next: (profile) => {

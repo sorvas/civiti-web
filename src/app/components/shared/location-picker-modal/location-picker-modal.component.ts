@@ -27,8 +27,8 @@ import { Subject, debounceTime, takeUntil } from 'rxjs';
 import {
   LocationData,
   LocationPickerConfig,
-  SECTOR_5_CENTER,
-  SECTOR_5_LOCATION_BIAS
+  BUCHAREST_CENTER,
+  BUCHAREST_LOCATION_BIAS
 } from '../../../types/location.types';
 
 export interface LocationPickerModalData {
@@ -75,7 +75,7 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
   // Google Maps state
   isMapLoaded = false;
   mapLoadError = false;
-  mapCenter = SECTOR_5_CENTER;
+  mapCenter = BUCHAREST_CENTER;
   mapZoom = 15;
   markerPosition: google.maps.LatLngLiteral | null = null;
 
@@ -278,8 +278,8 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
       input: query,
       componentRestrictions: { country: 'ro' },
       locationBias: {
-        center: SECTOR_5_LOCATION_BIAS.center,
-        radius: SECTOR_5_LOCATION_BIAS.radius
+        center: BUCHAREST_LOCATION_BIAS.center,
+        radius: BUCHAREST_LOCATION_BIAS.radius
       } as google.maps.CircleLiteral,
       types: ['address']
     };
@@ -480,15 +480,14 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
   }
 
   /**
-   * Check if selected location is within allowed area (Sector 5 for MVP)
+   * Check if selected location is within allowed area (București for MVP)
    */
   isInAllowedArea(): boolean {
     if (!this.selectedLocation) {
       return false;
     }
-    // For MVP, strictly require Sector 5
-    // If district can't be determined, don't allow (user must select more specific location)
-    return this.selectedLocation.district === 'Sector 5';
+    // For MVP, require București (any sector)
+    return this.selectedLocation.city === 'București';
   }
 
   /**
@@ -499,11 +498,11 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
       return null;
     }
     if (!this.isInAllowedArea()) {
-      const district = this.selectedLocation.district;
-      if (district) {
-        return `Locația selectată este în ${district}. Pentru MVP, acceptăm doar adrese din Sectorul 5.`;
+      const city = this.selectedLocation.city;
+      if (city && city !== 'București') {
+        return `Locația selectată este în ${city}. Pentru MVP, acceptăm doar adrese din București.`;
       }
-      return 'Nu am putut determina sectorul. Vă rugăm să selectați o adresă din Sectorul 5.';
+      return 'Pentru MVP, acceptăm doar adrese din București.';
     }
     return null;
   }

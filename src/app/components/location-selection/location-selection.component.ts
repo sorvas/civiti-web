@@ -21,13 +21,11 @@ import * as LocationActions from '../../store/location/location.actions';
 import * as AuthActions from '../../store/auth/auth.actions';
 import { selectIsAuthenticated, selectAuthUser, selectUserDisplayName } from '../../store/auth/auth.selectors';
 import { AuthUser } from '../../store/auth/auth.state';
-import { ROMANIAN_COUNTIES, getDistrictsForCity, getCitiesForCounty } from '../../data/romanian-locations';
 import { SanitizationService } from '../../services/sanitization.service';
 
 interface LocationData {
   counties: { id: string; name: string }[];
   cities: { id: string; name: string }[];
-  districts: { id: string; name: string }[];
 }
 
 @Component({
@@ -74,8 +72,7 @@ export class LocationSelectionComponent implements OnInit {
 
   locationForm = this._fb.group({
     county: [{ value: 'B', disabled: true }, Validators.required],
-    city: [{ value: 'BUCURESTI', disabled: true }, Validators.required],
-    district: [{ value: 'SECTOR5', disabled: true }, Validators.required] // Only Sector 5 for MVP
+    city: [{ value: 'București', disabled: true }, Validators.required]
   });
 
   ngOnInit(): void {
@@ -84,15 +81,14 @@ export class LocationSelectionComponent implements OnInit {
 
   private loadLocationData(): void {
     this.isLoading = true;
-    
+
     // Load static location data
-    // For MVP, we only use București Sector 5
+    // For MVP, hardcoded to București
     this.locationData = {
       counties: [{ id: 'B', name: 'București' }],
-      cities: [{ id: 'BUCURESTI', name: 'București' }],
-      districts: [{ id: 'SECTOR5', name: 'Sector 5' }]
+      cities: [{ id: 'București', name: 'București' }]
     };
-    
+
     this.isLoading = false;
   }
 
@@ -105,7 +101,7 @@ export class LocationSelectionComponent implements OnInit {
     const selectedLocation = {
       county: this._sanitizer.sanitizeUrlParam(rawData.county || ''),
       city: this._sanitizer.sanitizeUrlParam(rawData.city || ''),
-      district: this._sanitizer.sanitizeUrlParam(rawData.district || '')
+      district: '' // District selection moved to issues filter page
     };
 
     console.log('Location data:', selectedLocation); // Debug log

@@ -18,7 +18,7 @@ import { AppState } from '../../../store/app.state';
 import { selectIsAuthenticated } from '../../../store/auth/auth.selectors';
 import { IssueCategory, ISSUE_CATEGORIES } from '../../../types/civica-api.types';
 import { LocationPickerModalComponent } from '../../shared/location-picker-modal/location-picker-modal.component';
-import { LocationData, SECTOR_5_CENTER } from '../../../types/location.types';
+import { LocationData, BUCHAREST_CENTER } from '../../../types/location.types';
 
 interface IssueCategoryInfo {
   id: string;
@@ -108,12 +108,12 @@ export class IssueTypeSelectionComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Default location for Sector 5
+    // Default location for București (no specific sector)
     this.currentLocation = {
-      address: 'Sectorul 5, București',
-      coordinates: SECTOR_5_CENTER,
+      address: 'București, România',
+      coordinates: BUCHAREST_CENTER,
       city: 'București',
-      district: 'Sector 5'
+      district: undefined
     };
   }
 
