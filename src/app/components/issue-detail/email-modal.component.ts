@@ -149,11 +149,11 @@ Cu stimă,
      * Dispatches a single tracking action regardless of number of authorities
      */
     confirmEmailSent(): void {
-        // Track email sent once (not per authority to avoid inflating count)
-        const targetAuthorities = this.authorities.map(a => a.email).join(', ');
+        // Track email sent once - use first authority for logging purposes
+        const primaryAuthority = this.authorities[0]?.email || '';
         this._store.dispatch(IssueActions.trackEmailSent({
             issueId: this.issue.id,
-            targetAuthority: targetAuthorities
+            targetAuthority: primaryAuthority
         }));
 
         // Immediate feedback - effect will show points earned after API responds
