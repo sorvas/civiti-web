@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../services/api.service';
 import * as ActivityActions from './activity.actions';
+import * as AuthActions from '../auth/auth.actions';
 
 @Injectable()
 export class ActivityEffects {
@@ -24,6 +25,13 @@ export class ActivityEffects {
           })))
         )
       )
+    )
+  );
+
+  clearOnLogout$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.logout),
+      map(() => ActivityActions.clearActivity())
     )
   );
 }
