@@ -156,6 +156,8 @@ Cu stimă,
             targetAuthority: targetAuthorities
         }));
 
+        // Immediate feedback - effect will show points earned after API responds
+        this._message.success('Mulțumim pentru contribuție!');
         this._modalRef.close(true);
     }
 
