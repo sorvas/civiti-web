@@ -146,18 +146,16 @@ Cu stimă,
 
     /**
      * Called when user clicks "Am trimis email-ul" to confirm and track
-     * Dispatches tracking action for all authorities at once
+     * Dispatches a single tracking action regardless of number of authorities
      */
     confirmEmailSent(): void {
-        // Track email sent for each authority
-        for (const authority of this.authorities) {
-            this._store.dispatch(IssueActions.trackEmailSent({
-                issueId: this.issue.id,
-                targetAuthority: authority.email
-            }));
-        }
+        // Track email sent once (not per authority to avoid inflating count)
+        const targetAuthorities = this.authorities.map(a => a.email).join(', ');
+        this._store.dispatch(IssueActions.trackEmailSent({
+            issueId: this.issue.id,
+            targetAuthority: targetAuthorities
+        }));
 
-        this._message.success('Mulțumim pentru contribuție!');
         this._modalRef.close(true);
     }
 
