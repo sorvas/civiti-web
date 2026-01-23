@@ -13,6 +13,7 @@ export interface CommentsState extends EntityState<CommentResponse> {
   currentIssueId: string | null;
   editingCommentId: string | null;
   replyingToCommentId: string | null;
+  formResetCounter: number;
 }
 
 export const commentsAdapter: EntityAdapter<CommentResponse> = createEntityAdapter<CommentResponse>({
@@ -31,5 +32,6 @@ export const initialCommentsState: CommentsState = commentsAdapter.getInitialSta
   sortDescending: true,
   currentIssueId: null,
   editingCommentId: null,
-  replyingToCommentId: null
+  replyingToCommentId: null,
+  formResetCounter: 0
 });

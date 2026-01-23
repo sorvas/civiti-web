@@ -42,6 +42,7 @@
   <div *ngIf="(isAuthenticated$ | async) && canComment" class="new-comment-section">
     <app-comment-form
       [submitting]="(submitting$ | async) ?? false"
+      [resetKey]="(formResetCounter$ | async) ?? 0"
       placeholder="Adaugă un comentariu..."
       submitLabel="Comentează"
       (submitted)="onNewComment($event)"

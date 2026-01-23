@@ -125,3 +125,8 @@ export const selectTopLevelCommentsCount = createSelector(
   selectCommentTree,
   (tree) => tree.length
 );
+
+export const selectFormResetCounter = createSelector(
+  selectCommentsState,
+  (state) => state.formResetCounter
+);

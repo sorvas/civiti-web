@@ -55,6 +55,7 @@ export class CommentsComponent implements OnInit, OnDestroy {
   currentUserId$!: Observable<string | null>;
   isAdmin$!: Observable<boolean>;
   isAuthenticated$!: Observable<boolean>;
+  formResetCounter$!: Observable<number>;
 
   sortValue = 'date-desc';
 
@@ -75,6 +76,7 @@ export class CommentsComponent implements OnInit, OnDestroy {
     this.sortDescending$ = this.store.select(CommentsSelectors.selectSortDescending);
     this.editingCommentId$ = this.store.select(CommentsSelectors.selectEditingCommentId);
     this.replyingToCommentId$ = this.store.select(CommentsSelectors.selectReplyingToCommentId);
+    this.formResetCounter$ = this.store.select(CommentsSelectors.selectFormResetCounter);
 
     this.currentUserId$ = this.store.select(selectAuthUser).pipe(
       map(user => user?.id || null)

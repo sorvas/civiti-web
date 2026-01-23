@@ -41,7 +41,8 @@ export const commentsReducer = createReducer(
       submitting: false,
       error: null,
       replyingToCommentId: null,
-      totalCount: state.totalCount + 1
+      totalCount: state.totalCount + 1,
+      formResetCounter: state.formResetCounter + 1
     })
   ),
 
@@ -87,12 +88,17 @@ export const commentsReducer = createReducer(
   })),
 
   on(CommentsActions.deleteCommentSuccess, (state, { commentId }) =>
-    commentsAdapter.removeOne(commentId, {
-      ...state,
-      submitting: false,
-      error: null,
-      totalCount: state.totalCount - 1
-    })
+    commentsAdapter.updateOne(
+      {
+        id: commentId,
+        changes: { isDeleted: true, content: '' }
+      },
+      {
+        ...state,
+        submitting: false,
+        error: null
+      }
+    )
   ),
 
   on(CommentsActions.deleteCommentFailure, (state, { error }) => ({

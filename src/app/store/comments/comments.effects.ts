@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, tap } from 'rxjs/operators';
+import { map, catchError, switchMap, mergeMap, tap } from 'rxjs/operators';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { ApiService } from '../../services/api.service';
 import * as CommentsActions from './comments.actions';
@@ -84,7 +84,7 @@ export class CommentsEffects {
   voteHelpful$ = createEffect(() =>
     this.actions$.pipe(
       ofType(CommentsActions.voteHelpful),
-      switchMap((action) =>
+      mergeMap((action) =>
         this.apiService.voteCommentHelpful(action.commentId).pipe(
           map(() => CommentsActions.voteHelpfulSuccess({ commentId: action.commentId })),
           catchError(error => of(CommentsActions.voteHelpfulFailure({
@@ -98,7 +98,7 @@ export class CommentsEffects {
   removeVote$ = createEffect(() =>
     this.actions$.pipe(
       ofType(CommentsActions.removeVote),
-      switchMap((action) =>
+      mergeMap((action) =>
         this.apiService.removeCommentVote(action.commentId).pipe(
           map(() => CommentsActions.removeVoteSuccess({ commentId: action.commentId })),
           catchError(error => of(CommentsActions.removeVoteFailure({
