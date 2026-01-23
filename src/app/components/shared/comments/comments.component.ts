@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, input, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, combineLatest } from 'rxjs';
@@ -37,11 +37,13 @@ import { CommentItemComponent } from './comment-item/comment-item.component';
   styleUrl: './comments.component.scss'
 })
 export class CommentsComponent implements OnInit, OnDestroy {
-  @Input() issueId!: string;
-  @Input() issueStatus = '';
+  // Input signals (Angular 19+)
+  issueId = input.required<string>();
+  issueStatus = input<string>('');
 
   private store = inject(Store<AppState>);
   private destroy$ = new Subject<void>();
+  private previousIssueId: string | null = null;
 
   commentTree$!: Observable<CommentNode[]>;
   loading$!: Observable<boolean>;
@@ -59,14 +61,29 @@ export class CommentsComponent implements OnInit, OnDestroy {
 
   sortValue = 'date-desc';
 
+  constructor() {
+    // React to issueId changes using effect
+    effect(() => {
+      const currentIssueId = this.issueId();
+      if (currentIssueId) {
+        // Clear comments when switching to a different issue
+        if (this.previousIssueId && this.previousIssueId !== currentIssueId) {
+          this.store.dispatch(CommentsActions.clearComments());
+        }
+        this.store.dispatch(CommentsActions.loadComments({ issueId: currentIssueId }));
+        this.previousIssueId = currentIssueId;
+      }
+    });
+  }
+
   get canComment(): boolean {
     // Only allow comments on Active issues
-    const status = (this.issueStatus || '').toLowerCase();
+    const status = (this.issueStatus() || '').toLowerCase();
     return status === 'active';
   }
 
   get commentDisabledMessage(): string {
-    const status = (this.issueStatus || '').toLowerCase();
+    const status = (this.issueStatus() || '').toLowerCase();
     switch (status) {
       case 'draft':
         return 'Problema este în stadiu de ciornă. Comentariile vor fi disponibile după publicare.';
@@ -112,11 +129,6 @@ export class CommentsComponent implements OnInit, OnDestroy {
     ).subscribe(([sortBy, sortDescending]) => {
       this.sortValue = `${sortBy}-${sortDescending ? 'desc' : 'asc'}`;
     });
-
-    // Load comments
-    if (this.issueId) {
-      this.store.dispatch(CommentsActions.loadComments({ issueId: this.issueId }));
-    }
   }
 
   ngOnDestroy(): void {
@@ -135,7 +147,7 @@ export class CommentsComponent implements OnInit, OnDestroy {
 
   onNewComment(content: string): void {
     this.store.dispatch(CommentsActions.createComment({
-      issueId: this.issueId,
+      issueId: this.issueId(),
       content,
       parentCommentId: null
     }));
@@ -143,7 +155,7 @@ export class CommentsComponent implements OnInit, OnDestroy {
 
   onReply(content: string, parentCommentId: string): void {
     this.store.dispatch(CommentsActions.createComment({
-      issueId: this.issueId,
+      issueId: this.issueId(),
       content,
       parentCommentId
     }));

@@ -67,7 +67,7 @@
   }
 
   <!-- Status-specific message when comments are disabled -->
-  @if (!canComment && issueStatus) {
+  @if (!canComment && issueStatus()) {
     <div class="closed-message">
       <i nz-icon nzType="info-circle" nzTheme="outline"></i>
       <span>{{ commentDisabledMessage }}</span>
