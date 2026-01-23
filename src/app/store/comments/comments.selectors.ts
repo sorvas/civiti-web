@@ -68,22 +68,30 @@ export const selectCommentTree = createSelector(
     const map = new Map<string, CommentNode>();
     const roots: CommentNode[] = [];
 
-    // First pass: create nodes with empty children
+    // First pass: create nodes with empty children (depth will be set later)
     comments.forEach(c => {
       map.set(c.id, { ...c, children: [], depth: 0 });
     });
 
-    // Second pass: build tree
+    // Second pass: build tree structure (without calculating depth yet)
     comments.forEach(c => {
       const node = map.get(c.id)!;
       if (c.parentCommentId && map.has(c.parentCommentId)) {
         const parent = map.get(c.parentCommentId)!;
-        node.depth = parent.depth + 1;
         parent.children.push(node);
       } else {
         roots.push(node);
       }
     });
+
+    // Third pass: calculate depth recursively after tree is built
+    const calculateDepth = (nodes: CommentNode[], depth: number) => {
+      nodes.forEach(node => {
+        node.depth = depth;
+        calculateDepth(node.children, depth + 1);
+      });
+    };
+    calculateDepth(roots, 0);
 
     // Sort function based on sortBy
     const sortFn = (a: CommentNode, b: CommentNode): number => {

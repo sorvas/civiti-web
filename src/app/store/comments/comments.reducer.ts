@@ -35,16 +35,26 @@ export const commentsReducer = createReducer(
     error: null
   })),
 
-  on(CommentsActions.createCommentSuccess, (state, { comment }) =>
-    commentsAdapter.addOne(comment, {
+  on(CommentsActions.createCommentSuccess, (state, { comment }) => {
+    // Ignore stale responses from different issues
+    if (state.currentIssueId && comment.issueId !== state.currentIssueId) {
+      return {
+        ...state,
+        submitting: false,
+        error: null,
+        replyingToCommentId: null,
+        formResetCounter: state.formResetCounter + 1
+      };
+    }
+    return commentsAdapter.addOne(comment, {
       ...state,
       submitting: false,
       error: null,
       replyingToCommentId: null,
       totalCount: state.totalCount + 1,
       formResetCounter: state.formResetCounter + 1
-    })
-  ),
+    });
+  }),
 
   on(CommentsActions.createCommentFailure, (state, { error }) => ({
     ...state,

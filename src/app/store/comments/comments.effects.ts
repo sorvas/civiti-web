@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, mergeMap, tap } from 'rxjs/operators';
+import { map, catchError, switchMap, mergeMap, exhaustMap, tap } from 'rxjs/operators';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { ApiService } from '../../services/api.service';
 import * as CommentsActions from './comments.actions';
@@ -32,7 +32,7 @@ export class CommentsEffects {
   createComment$ = createEffect(() =>
     this.actions$.pipe(
       ofType(CommentsActions.createComment),
-      switchMap((action) =>
+      exhaustMap((action) =>
         this.apiService.createComment(action.issueId, {
           content: action.content,
           parentCommentId: action.parentCommentId
@@ -50,7 +50,7 @@ export class CommentsEffects {
   updateComment$ = createEffect(() =>
     this.actions$.pipe(
       ofType(CommentsActions.updateComment),
-      switchMap((action) =>
+      exhaustMap((action) =>
         this.apiService.updateComment(action.commentId, { content: action.content }).pipe(
           tap(() => this.message.success('Comentariu actualizat!')),
           map(() => CommentsActions.updateCommentSuccess({
@@ -69,7 +69,7 @@ export class CommentsEffects {
   deleteComment$ = createEffect(() =>
     this.actions$.pipe(
       ofType(CommentsActions.deleteComment),
-      switchMap((action) =>
+      exhaustMap((action) =>
         this.apiService.deleteComment(action.commentId).pipe(
           tap(() => this.message.success('Comentariu șters!')),
           map(() => CommentsActions.deleteCommentSuccess({ commentId: action.commentId })),
