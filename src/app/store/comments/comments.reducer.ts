@@ -36,14 +36,12 @@ export const commentsReducer = createReducer(
   })),
 
   on(CommentsActions.createCommentSuccess, (state, { comment }) => {
-    // Ignore stale responses from different issues
+    // Ignore stale responses from different issues - only reset submitting state
     if (state.currentIssueId && comment.issueId !== state.currentIssueId) {
       return {
         ...state,
         submitting: false,
-        error: null,
-        replyingToCommentId: null,
-        formResetCounter: state.formResetCounter + 1
+        error: null
       };
     }
     return commentsAdapter.addOne(comment, {
