@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, exhaustMap, mergeMap, tap, groupBy } from 'rxjs/operators';
+import { map, catchError, switchMap, exhaustMap, concatMap, tap } from 'rxjs/operators';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { ApiService } from '../../services/api.service';
 import * as CommentsActions from './comments.actions';
@@ -81,22 +81,27 @@ export class CommentsEffects {
     )
   );
 
-  // Use groupBy + exhaustMap to allow concurrent votes on different comments
-  // while preventing duplicate votes on the same comment
+  // Use concatMap to queue vote actions sequentially
+  // - No lost votes (all are queued, unlike exhaustMap)
+  // - No memory leak (unlike groupBy)
+  // - Slight serialization is acceptable since vote API calls are fast
+  // - "Already voted" errors are treated as success (intended state achieved)
   voteHelpful$ = createEffect(() =>
     this.actions$.pipe(
       ofType(CommentsActions.voteHelpful),
-      groupBy(action => action.commentId),
-      mergeMap(group$ =>
-        group$.pipe(
-          exhaustMap((action) =>
-            this.apiService.voteCommentHelpful(action.commentId).pipe(
-              map(() => CommentsActions.voteHelpfulSuccess({ commentId: action.commentId })),
-              catchError(error => of(CommentsActions.voteHelpfulFailure({
-                error: error.message || 'Eroare la votare'
-              })))
-            )
-          )
+      concatMap((action) =>
+        this.apiService.voteCommentHelpful(action.commentId).pipe(
+          map(() => CommentsActions.voteHelpfulSuccess({ commentId: action.commentId })),
+          catchError(error => {
+            // Treat "already voted" as success - the intended state was achieved
+            const errorMsg = error.message || error.error?.message || '';
+            if (errorMsg.toLowerCase().includes('already voted')) {
+              return of(CommentsActions.voteHelpfulSuccess({ commentId: action.commentId }));
+            }
+            return of(CommentsActions.voteHelpfulFailure({
+              error: errorMsg || 'Eroare la votare'
+            }));
+          })
         )
       )
     )
@@ -105,17 +110,21 @@ export class CommentsEffects {
   removeVote$ = createEffect(() =>
     this.actions$.pipe(
       ofType(CommentsActions.removeVote),
-      groupBy(action => action.commentId),
-      mergeMap(group$ =>
-        group$.pipe(
-          exhaustMap((action) =>
-            this.apiService.removeCommentVote(action.commentId).pipe(
-              map(() => CommentsActions.removeVoteSuccess({ commentId: action.commentId })),
-              catchError(error => of(CommentsActions.removeVoteFailure({
-                error: error.message || 'Eroare la anularea votului'
-              })))
-            )
-          )
+      concatMap((action) =>
+        this.apiService.removeCommentVote(action.commentId).pipe(
+          map(() => CommentsActions.removeVoteSuccess({ commentId: action.commentId })),
+          catchError(error => {
+            // Treat "not voted" / "vote not found" as success - the intended state was achieved
+            const errorMsg = error.message || error.error?.message || '';
+            if (errorMsg.toLowerCase().includes('not voted') ||
+                errorMsg.toLowerCase().includes('vote not found') ||
+                errorMsg.toLowerCase().includes('no vote')) {
+              return of(CommentsActions.removeVoteSuccess({ commentId: action.commentId }));
+            }
+            return of(CommentsActions.removeVoteFailure({
+              error: errorMsg || 'Eroare la anularea votului'
+            }));
+          })
         )
       )
     )
