@@ -6,8 +6,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Civiti** is a civic engagement platform for Romanian citizens to collectively pressure local authorities through coordinated email campaigns. The frontend is an Angular 19 application with NgRx state management, connected to a .NET backend deployed on Railway.
 
-**Backend API**: `https://civiti-server-production.up.railway.app`
-
 ## Build and Development Commands
 
 ```bash
@@ -16,18 +14,6 @@ npm install
 
 # Start development server (injects env vars automatically)
 npm run start:dev
-
-# Start server (requires manual env setup)
-npm start
-
-# Build for production
-npm run build
-
-# Run tests
-npm test
-
-# Run single test file
-ng test --include=**/path-to-spec.ts
 ```
 
 ## Architecture
@@ -84,10 +70,28 @@ font-family: "Fira Sans", sans-serif;
 ### Romanian Locale
 The app uses Romanian locale (`ro`). Component text should be in Romanian.
 
+### Templates
+- **Avoid method calls in templates** - They run on every change detection cycle
+- Prefer pure pipes for transformations (memoized, only recalculate when inputs change)
+- For computed values, use signals or move logic to pipes
+
+### Angular 19+ Patterns
+- **Use `inject()` over constructor injection** - Cleaner, works in functions
+- Use standalone components (no NgModules)
+- Prefer new control flow: `@if`, `@for`, `@switch`, `@defer` over structural directives
+- Use signal-based APIs:
+  - `input()` / `input.required()` over `@Input()`
+  - `output()` over `@Output()`
+  - `viewChild()` / `contentChild()` over `@ViewChild()` / `@ContentChild()`
+  - `model()` for two-way binding
+- Use `computed()` for derived state instead of getters
+- Use `takeUntilDestroyed()` for subscription cleanup
+- Use functional guards, resolvers, and interceptors
+- Use `provideRouter()` / `provideHttpClient()` over module imports
+
 ## Documentation
 
 Consult these docs for detailed specifications:
-- `docs/project/Implementation.md` - Implementation standards and backend architecture
 - `docs/design/ux.md` - User journey specifications
 - `docs/design/Colour-Scheme.md` - Color palette
 - `docs/design/Typography-Guide.md` - Typography standards
