@@ -46,11 +46,14 @@ export const commentsReducer = createReducer(
     }
     // Only increment formResetCounter for top-level comments, not replies
     const isTopLevelComment = !comment.parentCommentId;
+    // Only clear replyingToCommentId if it matches the completed reply operation
+    // Prevents closing a newly-opened reply form when a previous reply request completes
+    const shouldClearReplyForm = comment.parentCommentId === state.replyingToCommentId;
     return commentsAdapter.addOne(comment, {
       ...state,
       submitting: false,
       error: null,
-      replyingToCommentId: null,
+      replyingToCommentId: shouldClearReplyForm ? null : state.replyingToCommentId,
       totalCount: state.totalCount + 1,
       formResetCounter: isTopLevelComment ? state.formResetCounter + 1 : state.formResetCounter
     });
@@ -69,8 +72,11 @@ export const commentsReducer = createReducer(
     error: null
   })),
 
-  on(CommentsActions.updateCommentSuccess, (state, { commentId, content, updatedAt }) =>
-    commentsAdapter.updateOne(
+  on(CommentsActions.updateCommentSuccess, (state, { commentId, content, updatedAt }) => {
+    // Only clear editingCommentId if it matches the completed edit operation
+    // Prevents closing a newly-opened edit form when a previous edit request completes
+    const shouldClearEditForm = commentId === state.editingCommentId;
+    return commentsAdapter.updateOne(
       {
         id: commentId,
         changes: { content, updatedAt, isEdited: true }
@@ -79,10 +85,10 @@ export const commentsReducer = createReducer(
         ...state,
         submitting: false,
         error: null,
-        editingCommentId: null
+        editingCommentId: shouldClearEditForm ? null : state.editingCommentId
       }
-    )
-  ),
+    );
+  }),
 
   on(CommentsActions.updateCommentFailure, (state, { error }) => ({
     ...state,

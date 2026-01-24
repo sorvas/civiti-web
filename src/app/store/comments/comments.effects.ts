@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
-import { map, catchError, switchMap, exhaustMap, concatMap, tap } from 'rxjs/operators';
+import { map, catchError, switchMap, concatMap, tap } from 'rxjs/operators';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { ApiService } from '../../services/api.service';
 import * as CommentsActions from './comments.actions';
@@ -29,10 +29,14 @@ export class CommentsEffects {
     )
   );
 
+  // Use concatMap to queue comment actions sequentially
+  // - No lost comments (all are queued, unlike exhaustMap which drops actions during in-flight requests)
+  // - Critical for issue navigation: user can submit on Issue A, navigate to Issue B, submit there too
+  // - Reducer guards already handle stale responses (comments for wrong issueId are discarded)
   createComment$ = createEffect(() =>
     this.actions$.pipe(
       ofType(CommentsActions.createComment),
-      exhaustMap((action) =>
+      concatMap((action) =>
         this.apiService.createComment(action.issueId, {
           content: action.content,
           parentCommentId: action.parentCommentId
@@ -50,7 +54,7 @@ export class CommentsEffects {
   updateComment$ = createEffect(() =>
     this.actions$.pipe(
       ofType(CommentsActions.updateComment),
-      exhaustMap((action) =>
+      concatMap((action) =>
         this.apiService.updateComment(action.commentId, { content: action.content }).pipe(
           tap(() => this.message.success('Comentariu actualizat!')),
           map(() => CommentsActions.updateCommentSuccess({
@@ -69,7 +73,7 @@ export class CommentsEffects {
   deleteComment$ = createEffect(() =>
     this.actions$.pipe(
       ofType(CommentsActions.deleteComment),
-      exhaustMap((action) =>
+      concatMap((action) =>
         this.apiService.deleteComment(action.commentId).pipe(
           tap(() => this.message.success('Comentariu șters!')),
           map(() => CommentsActions.deleteCommentSuccess({ commentId: action.commentId })),
