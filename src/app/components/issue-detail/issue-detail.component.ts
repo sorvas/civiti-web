@@ -90,6 +90,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     // Photo download state
     isDownloading = false;
     downloadProgress: PhotoDownloadProgress | null = null;
+    private _downloadComplete$ = new Subject<void>();
 
     // Google Maps properties
     mapOptions: any = {
@@ -650,9 +651,9 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         this.isDownloading = true;
         this.downloadProgress = null;
 
-        // Subscribe to progress updates
+        // Subscribe to progress updates - completes when download finishes
         this._photoDownloadService.progress$
-            .pipe(takeUntil(this._destroy$))
+            .pipe(takeUntil(this._downloadComplete$), takeUntil(this._destroy$))
             .subscribe(progress => {
                 this.downloadProgress = progress;
                 this._cdr.detectChanges();
@@ -663,6 +664,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
             .pipe(takeUntil(this._destroy$))
             .subscribe({
                 next: result => {
+                    this._downloadComplete$.next();
                     this.isDownloading = false;
                     this.downloadProgress = null;
                     this._cdr.detectChanges();
@@ -679,6 +681,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
                 },
                 error: error => {
                     console.error('Photo download error:', error);
+                    this._downloadComplete$.next();
                     this.isDownloading = false;
                     this.downloadProgress = null;
                     this._cdr.detectChanges();
