@@ -30,6 +30,7 @@ import { GoogleMapsConfigService } from '../../services/google-maps-config.servi
 import { StatusTextPipe, StatusColorPipe } from '../../pipes/status.pipe';
 import { CommentsComponent } from '../shared/comments/comments.component';
 import { PhotoDownloadService, PhotoDownloadProgress } from '../../services/photo-download.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
     selector: 'app-issue-detail',
@@ -92,6 +93,9 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     downloadProgress: PhotoDownloadProgress | null = null;
     private _currentDownloadId: string | null = null;
     private _downloadComplete$ = new Subject<void>();
+
+    // Poster download state
+    isPosterLoading = false;
 
     // Google Maps properties
     mapOptions: any = {
@@ -334,6 +338,15 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     isTerminalState(issue: IssueDetailResponse): boolean {
         const status = (issue.status || '').toLowerCase();
         return status === 'resolved' || status === 'cancelled';
+    }
+
+    /**
+     * Check if QR poster is available for this issue.
+     * Only available for Active issues with public visibility.
+     */
+    isPosterAvailable(issue: IssueDetailResponse): boolean {
+        const status = (issue.status || '').toLowerCase();
+        return status === 'active' && issue.publicVisibility === true;
     }
 
     goBack(): void {
@@ -641,6 +654,37 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
             document.execCommand('copy');
             document.body.removeChild(textArea);
             this._message.success('Link copiat în clipboard!');
+        }
+    }
+
+    /**
+     * Open QR poster PDF in a new tab for printing
+     */
+    async downloadPoster(issue: IssueDetailResponse): Promise<void> {
+        if (!isPlatformBrowser(this._platformId)) return;
+        if (this.isPosterLoading) return;
+
+        this.isPosterLoading = true;
+        const posterUrl = `${environment.apiUrl}/issues/${issue.id}/poster`;
+
+        try {
+            const response = await fetch(posterUrl);
+            if (!response.ok) {
+                throw new Error('Failed to fetch poster');
+            }
+
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, '_blank');
+
+            // Clean up the blob URL after a delay to allow the new tab to load
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        } catch (error) {
+            console.error('Error opening poster:', error);
+            this._message.error('Eroare la deschiderea posterului.');
+        } finally {
+            this.isPosterLoading = false;
+            this._cdr.detectChanges();
         }
     }
 

@@ -257,6 +257,19 @@
                     <i nz-icon nzType="link" nzTheme="outline"></i>
                   </button>
                 </nz-space>
+                <!-- QR Poster for physical distribution -->
+                <div *ngIf="isPosterAvailable(issue)" class="mt-4 pt-4 border-t border-gray-200">
+                  <p class="text-oxford-blue opacity-75 mb-3 text-center text-xs">
+                    Sau tipărește un poster cu cod QR:
+                  </p>
+                  <button nz-button nzType="default" nzBlock
+                    [nzLoading]="isPosterLoading"
+                    nz-tooltip nzTooltipTitle="Deschide poster PDF cu cod QR pentru tipărire"
+                    (click)="downloadPoster(issue)">
+                    <i nz-icon nzType="qrcode" nzTheme="outline" class="mr-2"></i>
+                    Deschide Poster QR
+                  </button>
+                </div>
               </div>
             </nz-card>
 
