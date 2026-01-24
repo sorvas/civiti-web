@@ -22,7 +22,7 @@ export class CommentsEffects {
             totalCount: response.totalItems
           })),
           catchError(error => of(CommentsActions.loadCommentsFailure({
-            error: error.message || 'Eroare la încărcarea comentariilor'
+            error: error.error?.message || error.message || 'Eroare la încărcarea comentariilor'
           })))
         )
       )
@@ -40,7 +40,7 @@ export class CommentsEffects {
           tap(() => this.message.success('Comentariu adăugat cu succes!')),
           map(comment => CommentsActions.createCommentSuccess({ comment })),
           catchError(error => of(CommentsActions.createCommentFailure({
-            error: error.message || 'Eroare la adăugarea comentariului'
+            error: error.error?.message || error.message || 'Eroare la adăugarea comentariului'
           })))
         )
       )
@@ -59,7 +59,7 @@ export class CommentsEffects {
             updatedAt: new Date().toISOString()
           })),
           catchError(error => of(CommentsActions.updateCommentFailure({
-            error: error.message || 'Eroare la actualizarea comentariului'
+            error: error.error?.message || error.message || 'Eroare la actualizarea comentariului'
           })))
         )
       )
@@ -74,7 +74,7 @@ export class CommentsEffects {
           tap(() => this.message.success('Comentariu șters!')),
           map(() => CommentsActions.deleteCommentSuccess({ commentId: action.commentId })),
           catchError(error => of(CommentsActions.deleteCommentFailure({
-            error: error.message || 'Eroare la ștergerea comentariului'
+            error: error.error?.message || error.message || 'Eroare la ștergerea comentariului'
           })))
         )
       )
