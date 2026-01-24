@@ -29,22 +29,36 @@ export const commentsReducer = createReducer(
   })),
 
   // Create Comment
-  on(CommentsActions.createComment, (state) => ({
+  on(CommentsActions.createComment, (state, { issueId }) => ({
     ...state,
     submitting: true,
+    submittingForIssueId: issueId,
     error: null
   })),
 
   on(CommentsActions.createCommentSuccess, (state, { comment }) => {
-    // Ignore stale responses from different issues - only reset submitting state
-    if (state.currentIssueId && comment.issueId !== state.currentIssueId) {
+    // Check if this response is for the current in-flight submission
+    const isCurrentSubmission = comment.issueId === state.submittingForIssueId;
+    // Check if this comment belongs to the currently viewed issue
+    const isCurrentIssue = comment.issueId === state.currentIssueId;
+
+    // Stale response from different issue - don't modify state at all
+    // (another submission for the current issue may still be pending)
+    if (!isCurrentSubmission) {
+      return state;
+    }
+
+    // Response is for current submission but user navigated away - only reset submission state
+    if (!isCurrentIssue) {
       return {
         ...state,
         submitting: false,
+        submittingForIssueId: null,
         error: null
       };
     }
-    // Only increment formResetCounter for top-level comments, not replies
+
+    // Normal case: add comment to the current issue's list
     const isTopLevelComment = !comment.parentCommentId;
     // Only clear replyingToCommentId if it matches the completed reply operation
     // Prevents closing a newly-opened reply form when a previous reply request completes
@@ -52,6 +66,7 @@ export const commentsReducer = createReducer(
     return commentsAdapter.addOne(comment, {
       ...state,
       submitting: false,
+      submittingForIssueId: null,
       error: null,
       replyingToCommentId: shouldClearReplyForm ? null : state.replyingToCommentId,
       totalCount: state.totalCount + 1,
@@ -59,11 +74,20 @@ export const commentsReducer = createReducer(
     });
   }),
 
-  on(CommentsActions.createCommentFailure, (state, { error }) => ({
-    ...state,
-    submitting: false,
-    error
-  })),
+  on(CommentsActions.createCommentFailure, (state, { error, issueId }) => {
+    // Stale failure from different issue - don't modify state at all
+    if (issueId !== state.submittingForIssueId) {
+      return state;
+    }
+    // Only show error if user is still on the same issue
+    const showError = issueId === state.currentIssueId;
+    return {
+      ...state,
+      submitting: false,
+      submittingForIssueId: null,
+      error: showError ? error : null
+    };
+  }),
 
   // Update Comment
   on(CommentsActions.updateComment, (state) => ({

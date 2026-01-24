@@ -4,6 +4,8 @@ import { CommentResponse } from '../../types/civica-api.types';
 export interface CommentsState extends EntityState<CommentResponse> {
   loading: boolean;
   submitting: boolean;
+  // Tracks which issue has an in-flight create request, used to ignore stale responses
+  submittingForIssueId: string | null;
   error: string | null;
   totalCount: number;
   currentPage: number;
@@ -24,6 +26,7 @@ export const commentsAdapter: EntityAdapter<CommentResponse> = createEntityAdapt
 export const initialCommentsState: CommentsState = commentsAdapter.getInitialState({
   loading: false,
   submitting: false,
+  submittingForIssueId: null,
   error: null,
   totalCount: 0,
   currentPage: 1,

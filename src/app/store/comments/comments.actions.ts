@@ -30,7 +30,7 @@ export const createCommentSuccess = createAction(
 
 export const createCommentFailure = createAction(
   '[Comments] Create Comment Failure',
-  props<{ error: string }>()
+  props<{ error: string; issueId: string }>()
 );
 
 // Update Comment

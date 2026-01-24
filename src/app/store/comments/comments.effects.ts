@@ -44,7 +44,8 @@ export class CommentsEffects {
           tap(() => this.message.success('Comentariu adăugat cu succes!')),
           map(comment => CommentsActions.createCommentSuccess({ comment })),
           catchError(error => of(CommentsActions.createCommentFailure({
-            error: error.error?.message || error.message || 'Eroare la adăugarea comentariului'
+            error: error.error?.message || error.message || 'Eroare la adăugarea comentariului',
+            issueId: action.issueId
           })))
         )
       )
