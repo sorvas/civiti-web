@@ -364,7 +364,6 @@ export interface IssueDetailResponse {
   hasVoted: boolean | null;
   desiredOutcome?: string;
   communityImpact?: string;
-  publicVisibility: boolean;
   createdAt: string;
   updatedAt: string;
   photos: IssuePhotoResponse[];
@@ -545,7 +544,6 @@ export interface AdminIssueDetailResponse {
   // Admin details
   adminNotes?: string;
   rejectionReason?: string;
-  publicVisibility: boolean;
 
   // Review info
   reviewedAt?: string;

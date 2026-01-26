@@ -281,7 +281,7 @@
                   </button>
                 </nz-space>
                 <!-- QR Poster for physical distribution -->
-                <div *ngIf="isPosterAvailable(issue)" class="mt-4 pt-4 border-t border-gray-200">
+                <div *ngIf="issue.status | isActive" class="mt-4 pt-4 border-t border-gray-200">
                   <p class="text-oxford-blue opacity-75 mb-3 text-center text-xs">
                     Sau tipărește un poster cu cod QR:
                   </p>

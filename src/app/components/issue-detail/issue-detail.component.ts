@@ -29,7 +29,7 @@ import { IssueDetailResponse, isPubliclyViewableStatus } from '../../types/civic
 import { EmailModalComponent } from './email-modal.component';
 import { GoogleMap, MapMarker, MapInfoWindow } from '@angular/google-maps';
 import { GoogleMapsConfigService } from '../../services/google-maps-config.service';
-import { StatusTextPipe, StatusColorPipe } from '../../pipes/status.pipe';
+import { StatusTextPipe, StatusColorPipe, IsActivePipe } from '../../pipes/status.pipe';
 import { IsUrgentPipe } from '../../pipes/urgency.pipe';
 import { CommentsComponent } from '../shared/comments/comments.component';
 import { PhotoDownloadService, PhotoDownloadProgress } from '../../services/photo-download.service';
@@ -59,6 +59,7 @@ import { environment } from '../../../environments/environment';
         MapInfoWindow,
         StatusTextPipe,
         StatusColorPipe,
+        IsActivePipe,
         IsUrgentPipe,
         CommentsComponent,
     ],
@@ -98,6 +99,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     isVoting = signal(false);
     private _actions$ = inject(Actions);
     private _currentUserId: string | null = null;
+    private _currentIssueId: string | null = null;
 
     // Photo download state
     isDownloading = false;
@@ -143,6 +145,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         });
 
         // Subscribe to voting action results to manage loading state
+        // Filter by current issue ID to prevent premature loading state reset
         this._actions$.pipe(
             ofType(
                 IssueActions.voteForIssueSuccess,
@@ -150,6 +153,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
                 IssueActions.removeVoteFromIssueSuccess,
                 IssueActions.removeVoteFromIssueFailure
             ),
+            filter(action => action.issueId === this._currentIssueId),
             takeUntil(this._destroy$)
         ).subscribe(() => {
             this.isVoting.set(false);
@@ -178,6 +182,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     ngOnInit(): void {
         const issueId = this._route.snapshot.paramMap.get('id');
         if (issueId) {
+            this._currentIssueId = issueId;
             this._store.dispatch(IssueActions.loadIssue({ id: issueId }));
 
             // Check access control: wait for auth to initialize, then check permissions
@@ -421,15 +426,6 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         } else {
             this._store.dispatch(IssueActions.voteForIssue({ issueId: issue.id }));
         }
-    }
-
-    /**
-     * Check if QR poster is available for this issue.
-     * Only available for Active issues with public visibility.
-     */
-    isPosterAvailable(issue: IssueDetailResponse): boolean {
-        const status = (issue.status || '').toLowerCase();
-        return status === 'active' && issue.publicVisibility === true;
     }
 
     goBack(): void {
