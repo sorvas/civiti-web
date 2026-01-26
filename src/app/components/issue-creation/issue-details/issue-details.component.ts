@@ -95,7 +95,7 @@ export class IssueDetailsComponent implements OnInit, OnDestroy {
       description: ['', [Validators.required, Validators.minLength(10)]],
       desiredOutcome: ['', [Validators.required, Validators.minLength(10)]],
       communityImpact: ['', [Validators.required, Validators.minLength(10)]],
-      urgency: ['Medium'],
+      urgency: ['medium'],
       whenOccurred: ['now']
     });
   }
@@ -264,16 +264,10 @@ export class IssueDetailsComponent implements OnInit, OnDestroy {
    */
   private normalizeUrgency(value: string | undefined): string {
     if (!value) {
-      return 'Medium';
+      return 'medium';
     }
-    // Map of valid urgency values (case-insensitive lookup)
-    const urgencyMap: Record<string, string> = {
-      'low': 'Low',
-      'medium': 'Medium',
-      'high': 'High',
-      'urgent': 'Urgent'
-    };
-    const normalized = urgencyMap[value.toLowerCase()];
-    return normalized || 'Medium';
+    const validValues = ['low', 'medium', 'high', 'urgent'];
+    const normalized = value.toLowerCase();
+    return validValues.includes(normalized) ? normalized : 'medium';
   }
 }

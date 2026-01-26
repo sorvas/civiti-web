@@ -20,7 +20,7 @@ export type IssueCategory =
   | 'Safety'
   | 'Other';
 
-export type UrgencyLevel = 'Unspecified' | 'Low' | 'Medium' | 'High' | 'Urgent';
+export type UrgencyLevel = 'unspecified' | 'low' | 'medium' | 'high' | 'urgent';
 
 export type IssueStatus =
   | 'Unspecified'
@@ -692,7 +692,8 @@ export interface IssueQueryParams {
   city?: string;
   district?: string;
   address?: string;
-  status?: IssueStatus;
+  /** Status filter - can be single status or comma-separated (e.g., 'Active,Resolved') */
+  status?: IssueStatus | string;
   sortBy?: string;
   sortDescending?: boolean;
 }
@@ -772,11 +773,11 @@ export interface FilterOptions {
 // Use CategoryService for category labels
 
 export const URGENCY_LEVELS: Record<UrgencyLevel, string> = {
-  Unspecified: 'Nespecificat',
-  Low: 'Scăzută',
-  Medium: 'Medie',
-  High: 'Ridicată',
-  Urgent: 'Urgentă'
+  unspecified: 'Nespecificat',
+  low: 'Scăzută',
+  medium: 'Medie',
+  high: 'Ridicată',
+  urgent: 'Urgentă'
 };
 
 export const ISSUE_STATUSES: Record<IssueStatus, string> = {

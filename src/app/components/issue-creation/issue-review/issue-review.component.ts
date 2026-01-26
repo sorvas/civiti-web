@@ -106,10 +106,10 @@ export class IssueReviewComponent implements OnInit, OnDestroy {
 
   getUrgencyStatus(urgency: string): 'default' | 'processing' | 'success' | 'error' | 'warning' {
     const statuses: { [key: string]: 'default' | 'processing' | 'success' | 'error' | 'warning' } = {
-      'Low': 'default',
-      'Medium': 'processing',
-      'High': 'warning',
-      'Urgent': 'error'
+      'low': 'default',
+      'medium': 'processing',
+      'high': 'warning',
+      'urgent': 'error'
     };
     return statuses[urgency] || 'default';
   }
@@ -128,10 +128,10 @@ export class IssueReviewComponent implements OnInit, OnDestroy {
 
   getUrgencyLabel(urgency: string): string {
     const labels: { [key: string]: string } = {
-      'Low': 'Scăzută',
-      'Medium': 'Medie',
-      'High': 'Ridicată',
-      'Urgent': 'Urgentă'
+      'low': 'Scăzută',
+      'medium': 'Medie',
+      'high': 'Ridicată',
+      'urgent': 'Urgentă'
     };
     return labels[urgency] || urgency;
   }
