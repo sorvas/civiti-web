@@ -79,6 +79,22 @@
   max-width: 1200px;
 }
 
+// Fix text wrapping in tabs - flex containers need min-width: 0 for proper text overflow
+:host ::ng-deep {
+  .ant-tabs-content,
+  .ant-tabs-tabpane,
+  .ant-card-body {
+    min-width: 0;
+  }
+}
+
+// Ensure text wraps properly with whitespace-pre-wrap
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
 button[mat-raised-button] {
   text-transform: none;
   font-weight: 600;

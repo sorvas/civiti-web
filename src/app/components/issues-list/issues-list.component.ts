@@ -11,7 +11,6 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzGridModule } from 'ng-zorro-antd/grid';
-import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
@@ -46,7 +45,6 @@ import { IsUrgentPipe } from '../../pipes/urgency.pipe';
     NzSelectModule,
     NzFormModule,
     NzGridModule,
-    NzStatisticModule,
     NzEmptyModule,
     NzToolTipModule,
     NzModalModule,
