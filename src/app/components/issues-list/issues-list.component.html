@@ -2,7 +2,7 @@
   <div class="container mx-auto p-4 max-w-6xl">
     <!-- Issues Control Panel -->
     <div class="issues-control-panel">
-      <!-- Header Row: Title + Sort -->
+      <!-- Header Row: Title -->
       <div class="control-panel-header">
         <div class="header-info">
           <h2 class="text-oxford-blue font-semibold text-lg">
@@ -16,15 +16,6 @@
               Alege o problemă și ajută la rezolvarea ei
             </span>
           </p>
-        </div>
-        <div class="header-sort">
-          <nz-select [(ngModel)]="sortBy" (ngModelChange)="onSortChange()"
-                     nzPlaceHolder="Sortare" style="width: 180px;">
-            <nz-option nzValue="date" nzLabel="Cele mai noi"></nz-option>
-            <nz-option nzValue="emails" nzLabel="Contribuții"></nz-option>
-            <nz-option nzValue="votes" nzLabel="Cele mai votate"></nz-option>
-            <nz-option nzValue="urgency" nzLabel="Urgență"></nz-option>
-          </nz-select>
         </div>
       </div>
 
@@ -70,7 +61,7 @@
           </div>
 
           <!-- Sector Filter -->
-          <div class="filter-item">
+          <div class="filter-item filter-sector">
             <nz-select
               [(ngModel)]="selectedDistrict"
               (ngModelChange)="onDistrictChange()"
@@ -83,7 +74,7 @@
           </div>
 
           <!-- Category Filter -->
-          <div class="filter-item">
+          <div class="filter-item filter-category">
             <nz-select
               [(ngModel)]="selectedCategory"
               (ngModelChange)="onCategoryChange()"
@@ -96,7 +87,7 @@
           </div>
 
           <!-- Status Filter -->
-          <div class="filter-item">
+          <div class="filter-item filter-status">
             <nz-select
               [(ngModel)]="selectedStatus"
               (ngModelChange)="onStatusChange()"
@@ -104,6 +95,20 @@
               nzSize="default"
               style="width: 100%">
               <nz-option *ngFor="let s of statusOptions" [nzValue]="s.value" [nzLabel]="s.label"></nz-option>
+            </nz-select>
+          </div>
+
+          <!-- Sort -->
+          <div class="filter-item filter-sort">
+            <nz-select
+              [(ngModel)]="sortBy"
+              (ngModelChange)="onSortChange()"
+              nzSize="default"
+              style="width: 100%">
+              <nz-option nzValue="date" nzLabel="Cele mai noi"></nz-option>
+              <nz-option nzValue="emails" nzLabel="Contribuții"></nz-option>
+              <nz-option nzValue="votes" nzLabel="Cele mai votate"></nz-option>
+              <nz-option nzValue="urgency" nzLabel="Urgență"></nz-option>
             </nz-select>
           </div>
 
@@ -172,34 +177,23 @@
             </div>
 
             <!-- Stats Row -->
-            <div class="flex items-center justify-between border-t border-platinum pt-3">
-              <!-- Email Counter - PROMINENT as required -->
-              <div class="email-counter">
-                <nz-statistic
-                  [nzValue]="issue.emailsSent"
-                  [nzTitle]="'contribuții'"
-                  [nzPrefix]="emailIcon"
-                  class="email-counter-stat">
-                </nz-statistic>
-                <ng-template #emailIcon>
-                  <i nz-icon nzType="mail" nzTheme="outline" class="text-orange-web"></i>
-                </ng-template>
+            <div class="stats-grid">
+              <!-- Emails -->
+              <div class="stat-item" nz-tooltip nzTooltipTitle="Emailuri trimise">
+                <i nz-icon nzType="mail" nzTheme="outline"></i>
+                <span class="stat-value">{{ issue.emailsSent }}</span>
               </div>
 
-              <!-- Vote Count - SUBTLE indicator -->
-              <div class="vote-indicator" *ngIf="issue.communityVotes > 0">
+              <!-- Votes -->
+              <div class="stat-item" nz-tooltip nzTooltipTitle="Voturi comunitate">
                 <i nz-icon nzType="like" nzTheme="outline"></i>
-                <span>{{ issue.communityVotes }}</span>
+                <span class="stat-value">{{ issue.communityVotes }}</span>
               </div>
 
               <!-- Days Since -->
-              <div class="text-right">
-                <div class="text-sm font-semibold text-oxford-blue">
-                  {{ getDaysSince(issue.createdAt) }}
-                </div>
-                <div class="text-xs text-oxford-blue opacity-60">
-                  zile în urmă
-                </div>
+              <div class="stat-item" nz-tooltip nzTooltipTitle="Zile de la raportare">
+                <i nz-icon nzType="calendar" nzTheme="outline"></i>
+                <span class="stat-value">{{ getDaysSince(issue.createdAt) }}</span>
               </div>
             </div>
 
