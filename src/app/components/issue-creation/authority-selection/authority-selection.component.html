@@ -110,9 +110,9 @@
       </nz-alert>
 
       <nz-spin [nzSpinning]="isLoadingAuthorities || isSearching">
-        @if (filteredAuthorities.length > 0) {
+        @if (filteredAuthorities().length > 0) {
           <div class="authorities-list">
-            @for (group of groupedAuthorities; track group.label) {
+            @for (group of groupedAuthorities(); track group.label) {
               <div class="authority-group">
                 <div class="group-header">
                   <span nz-icon [nzType]="group.icon" class="group-icon"></span>
@@ -147,7 +147,7 @@
           </div>
         }
 
-        @if (!isLoadingAuthorities && !isSearching && filteredAuthorities.length === 0) {
+        @if (!isLoadingAuthorities && !isSearching && filteredAuthorities().length === 0) {
           <nz-empty
             nzNotFoundContent="Nu s-au găsit autorități pentru această locație. Poți adăuga una personalizată mai jos.">
           </nz-empty>

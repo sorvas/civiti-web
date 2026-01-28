@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -107,11 +107,38 @@ export class AuthoritySelectionComponent implements OnInit {
 
   // Authority selection state
   availableAuthorities: AuthorityListResponse[] = [];
-  filteredAuthorities: AuthorityListResponse[] = [];
+  filteredAuthorities = signal<AuthorityListResponse[]>([]);
   selectedAuthorities: SelectedAuthority[] = [];
   searchTerm = '';
   isLoadingAuthorities = false;
   isSearching = false;
+
+  /** Grouped authorities for display - computed from filteredAuthorities signal */
+  groupedAuthorities = computed<AuthorityGroup[]>(() => {
+    const filtered = this.filteredAuthorities();
+    const municipal = filtered.filter(a => !a.district);
+    const district = filtered.filter(a => a.district);
+
+    const groups: AuthorityGroup[] = [];
+
+    if (municipal.length > 0) {
+      groups.push({
+        label: 'Autorități municipale',
+        icon: 'bank',
+        authorities: municipal
+      });
+    }
+
+    if (district.length > 0) {
+      groups.push({
+        label: `Autorități ${this.issueDistrict || 'locale'}`,
+        icon: 'home',
+        authorities: district
+      });
+    }
+
+    return groups;
+  });
 
   // Custom email form
   customEmailForm!: FormGroup;
@@ -171,7 +198,7 @@ export class AuthoritySelectionComponent implements OnInit {
       .subscribe(authorities => {
         console.log('[AUTHORITY SELECTION] Loaded authorities:', authorities);
         this.availableAuthorities = authorities;
-        this.filteredAuthorities = [...authorities];
+        this.filteredAuthorities.set([...authorities]);
         this.isLoadingAuthorities = false;
         this.isSearching = false;
       });
@@ -324,34 +351,6 @@ export class AuthoritySelectionComponent implements OnInit {
 
   get remainingSlots(): number {
     return this.MAX_AUTHORITIES - this.selectedAuthorities.length;
-  }
-
-  /**
-   * Group filtered authorities into municipal and district-specific sections
-   */
-  get groupedAuthorities(): AuthorityGroup[] {
-    const municipal = this.filteredAuthorities.filter(a => !a.district);
-    const district = this.filteredAuthorities.filter(a => a.district);
-
-    const groups: AuthorityGroup[] = [];
-
-    if (municipal.length > 0) {
-      groups.push({
-        label: 'Autorități municipale',
-        icon: 'bank',
-        authorities: municipal
-      });
-    }
-
-    if (district.length > 0) {
-      groups.push({
-        label: `Autorități ${this.issueDistrict || 'locale'}`,
-        icon: 'home',
-        authorities: district
-      });
-    }
-
-    return groups;
   }
 
   continueToReview(): void {
