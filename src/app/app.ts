@@ -36,8 +36,6 @@ export class App implements OnInit {
   private _router = inject(Router);
   private _activatedRoute = inject(ActivatedRoute);
 
-  protected title = 'Civiti';
-
   // Default route config - hideHeader true to prevent flash on cold start
   routeConfig: RouteConfig = {
     title: 'Civiti',

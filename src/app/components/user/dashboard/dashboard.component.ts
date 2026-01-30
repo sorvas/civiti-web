@@ -98,7 +98,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   userIssuesSummary$!: Observable<{ active: number; resolved: number; rejected: number; total: number }>;
   recentUserIssues$!: Observable<IssueItem[]>;
   userIssuesLoading$!: Observable<boolean>;
-  hasUserIssues$!: Observable<boolean>;
 
   // Activity Observables
   recentActivity$!: Observable<ActivityFeedItem[]>;
@@ -123,7 +122,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.userIssuesSummary$ = this.store.select(UserIssuesSelectors.selectUserIssuesSummary);
     this.recentUserIssues$ = this.store.select(UserIssuesSelectors.selectRecentUserIssues);
     this.userIssuesLoading$ = this.store.select(UserIssuesSelectors.selectUserIssuesLoading);
-    this.hasUserIssues$ = this.store.select(UserIssuesSelectors.selectHasUserIssues);
 
     // Activity observables
     this.recentActivity$ = this.store.select(ActivitySelectors.selectRecentActivities);
