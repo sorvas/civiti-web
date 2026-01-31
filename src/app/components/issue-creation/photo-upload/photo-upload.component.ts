@@ -324,8 +324,8 @@ export class PhotoUploadComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!files || files.length === 0) return;
 
     // Check if adding these files would exceed the limit
-    if (this.uploadedPhotos.length + files.length > 5) {
-      this.message.warning('Maxim 5 fotografii permise. Vă rugăm să ștergeți câteva fotografii mai întâi.');
+    if (this.uploadedPhotos.length + files.length > 8) {
+      this.message.warning('Maxim 8 fotografii permise. Vă rugăm să ștergeți câteva fotografii mai întâi.');
       target.value = '';  // Reset to allow re-selection
       return;
     }
