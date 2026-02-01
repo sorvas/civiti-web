@@ -131,6 +131,7 @@ export class IssueTypeSelectionComponent implements OnInit, OnDestroy {
     console.log('[TIP PROBLEMĂ] Categorie selectată:', category.name);
     if (!this.isTitleCustomized) {
       this.issueTitle = this.generateDefaultTitle();
+      sessionStorage.setItem('civica_issue_title', this.issueTitle);
     }
   }
 
@@ -238,6 +239,7 @@ export class IssueTypeSelectionComponent implements OnInit, OnDestroy {
         // Regenerate title if not customized
         if (!this.isTitleCustomized) {
           this.issueTitle = this.generateDefaultTitle();
+          sessionStorage.setItem('civica_issue_title', this.issueTitle);
         }
       }
     });
