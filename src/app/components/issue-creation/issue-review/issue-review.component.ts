@@ -172,7 +172,7 @@ export class IssueReviewComponent implements OnInit, OnDestroy {
 
     // Prepare issue data for submission using the API format
     const issueToSubmit: CreateIssueRequest = {
-      title: this.resolveIssueTitle(),
+      title: this.issueTitle,
       description: this.issueData.description,
       category: this.issueData.category.id as IssueCategory,
       address: this.issueData.location.address,
