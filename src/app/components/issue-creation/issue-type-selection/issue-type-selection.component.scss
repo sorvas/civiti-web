@@ -427,6 +427,23 @@
   }
 }
 
+// Mobile category dropdown (hidden on desktop)
+.categories-dropdown {
+  display: none;
+  max-width: 600px;
+  margin: 0 auto 2rem;
+
+  nz-select {
+    width: 100%;
+  }
+
+  .category-description-mobile {
+    margin-top: 0.5rem;
+    color: rgba(20, 33, 61, 0.7);
+    font-size: 0.9rem;
+  }
+}
+
 // Mobile responsiveness
 @media (max-width: 768px) {
   .issue-type-container {
@@ -456,7 +473,7 @@
   }
 
   .step-label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .progress-line {
@@ -483,6 +500,64 @@
 
   .auth-actions {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 576px) {
+  .issue-type-container {
+    padding: 0.75rem;
+  }
+
+  .step-label {
+    display: none;
+  }
+
+  .step-number {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+  }
+
+  .progress-line {
+    margin: 0 0.25rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .page-header {
+    margin-bottom: 1rem;
+  }
+
+  .nav-buttons {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+
+  .nav-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .nav-spacer {
+    display: none;
+  }
+
+  .categories-dropdown {
+    display: block;
+  }
+
+  .categories-grid {
+    display: none;
+  }
+
+  .categories-intro {
+    display: none;
   }
 }
 
