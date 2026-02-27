@@ -1,9 +1,8 @@
-import { Component, inject, OnInit, OnDestroy, DestroyRef, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, PLATFORM_ID } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject } from 'rxjs';
-import { takeUntil, map, distinctUntilChanged, debounceTime } from 'rxjs/operators';
+import { map, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -30,6 +29,7 @@ import { BUCHAREST_DISTRICTS, DEFAULT_CITY } from '../../data/romanian-locations
 import { BUCHAREST_LOCATION_BIAS } from '../../types/location.types';
 import { StatusTextPipe, StatusColorPipe } from '../../pipes/status.pipe';
 import { IsUrgentPipe } from '../../pipes/urgency.pipe';
+import { DaysSincePipe } from '../../pipes/date.pipe';
 
 @Component({
   selector: 'app-issues-list',
@@ -53,18 +53,19 @@ import { IsUrgentPipe } from '../../pipes/urgency.pipe';
     StatusTextPipe,
     StatusColorPipe,
     IsUrgentPipe,
+    DaysSincePipe,
   ],
   templateUrl: './issues-list.component.html',
   styleUrl: './issues-list.component.scss'
 })
-export class IssuesListComponent implements OnInit, OnDestroy {
+export class IssuesListComponent implements OnInit {
   private _router = inject(Router);
   private _route = inject(ActivatedRoute);
   private _store = inject(Store<AppState>);
   private _modal = inject(NzModalService);
   private _platformId = inject(PLATFORM_ID);
   private _categoryService = inject(CategoryService);
-  private _destroy$ = new Subject<void>();
+  private _destroyRef = inject(DestroyRef);
   private _imageErrorCount: Map<string, number> = new Map();
 
   issues$!: Observable<IssueItem[]>;
@@ -133,14 +134,14 @@ export class IssuesListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Load categories from backend
     this._categoryService.getCategories()
-      .pipe(takeUntil(this._destroy$))
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe(categories => {
         this.categories = categories;
       });
 
     // Subscribe to city from location store
     this._store.select(selectCity)
-      .pipe(takeUntil(this._destroy$))
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe(city => {
         this._currentCity = city || DEFAULT_CITY;
       });
@@ -149,7 +150,7 @@ export class IssuesListComponent implements OnInit, OnDestroy {
     this.addressSearchControl.valueChanges
       .pipe(
         debounceTime(300),
-        takeUntil(this._destroy$)
+        takeUntilDestroyed(this._destroyRef)
       )
       .subscribe(value => {
         if (value && value.length >= 3) {
@@ -168,7 +169,7 @@ export class IssuesListComponent implements OnInit, OnDestroy {
     // Listen to URL query params and sync with store
     this._route.queryParams
       .pipe(
-        takeUntil(this._destroy$),
+        takeUntilDestroyed(this._destroyRef),
         map(params => {
           let page = params['page'] ? parseInt(params['page'], 10) : 1;
           // Validate page number
@@ -230,11 +231,6 @@ export class IssuesListComponent implements OnInit, OnDestroy {
           }
         }));
       });
-  }
-
-  ngOnDestroy(): void {
-    this._destroy$.next();
-    this._destroy$.complete();
   }
 
   onPageChange(page: number): void {

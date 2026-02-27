@@ -127,17 +127,37 @@ export const routes: Routes = [
   {
     path: 'location',
     loadComponent: () => import('./components/location-selection/location-selection.component').then(m => m.LocationSelectionComponent),
-    data: { animation: 'LocationPage', hideHeader: true }
+    data: {
+      animation: 'LocationPage',
+      hideHeader: true,
+      seo: {
+        title: 'Selectează Localitatea',
+        description: 'Alege orașul tău pentru a vedea și raporta probleme locale. Platforma de participare civică pentru cetățenii din România.',
+      }
+    }
   },
   {
     path: 'issues',
     loadComponent: () => import('./components/issues-list/issues-list.component').then(m => m.IssuesListComponent),
-    data: { animation: 'IssuesPage', headerTitle: 'Probleme Active în București' }
+    data: {
+      animation: 'IssuesPage',
+      headerTitle: 'Probleme Active',
+      seo: {
+        title: 'Probleme Active',
+        description: 'Vezi toate problemele raportate de cetățeni. Infrastructură, mediu, siguranță publică și multe altele.',
+      }
+    }
   },
   {
     path: 'issue/:id',
     loadComponent: () => import('./components/issue-detail/issue-detail.component').then(m => m.IssueDetailComponent),
-    data: { animation: 'DetailPage', renderMode: 'client', headerTitle: 'Detalii Problemă', showBackButton: true, backUrl: '/issues' }
+    data: {
+      animation: 'DetailPage',
+      headerTitle: 'Detalii Problemă',
+      showBackButton: true,
+      backUrl: '/issues',
+      // SEO tags for issue detail are set dynamically by the component via SeoService
+    }
   },
   // Fallback route
   {

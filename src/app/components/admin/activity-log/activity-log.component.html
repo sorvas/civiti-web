@@ -45,24 +45,24 @@
         <nz-timeline>
           @for (activity of activities; track activity.id) {
             <nz-timeline-item
-              [nzColor]="getTimelineColor(activity.actionType)"
+              [nzColor]="activity.actionType | timelineColor"
             >
               <div class="activity-item">
                 <div class="activity-header">
                   <div class="admin-info">
                     <span class="admin-name">{{ activity.adminName }}</span>
-                    <nz-tag [nzColor]="getActionColor(activity.actionType)" nzMode="default">
-                      {{ getActionLabel(activity.actionType) }}
+                    <nz-tag [nzColor]="activity.actionType | actionColor" nzMode="default">
+                      {{ activity.actionType | actionLabel }}
                     </nz-tag>
                   </div>
-                  <span class="activity-time">{{ formatDateTime(activity.createdAt) }}</span>
+                  <span class="activity-time">{{ activity.createdAt | formatDateTime }}</span>
                 </div>
 
                 <div class="activity-target">
                   <span class="target-type">
                     <i nz-icon nzType="file-text" nzTheme="outline"></i>
                   </span>
-                  <span class="target-name">{{ getTargetLabel(activity) }}</span>
+                  <span class="target-name">{{ activity | targetLabel }}</span>
                 </div>
 
                 @if (activity.notes) {

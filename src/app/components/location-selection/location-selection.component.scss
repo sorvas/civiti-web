@@ -84,13 +84,13 @@
 }
 
 :deep(.ant-select-selector) {
-  height: 48px !important;
-  border-radius: 8px !important;
+  height: 48px;
+  border-radius: 8px;
 
   .ant-select-selection-search-input,
   .ant-select-selection-item,
   .ant-select-selection-placeholder {
-    line-height: 46px !important;
+    line-height: 46px;
   }
 }
 

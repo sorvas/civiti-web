@@ -1,9 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -58,8 +57,8 @@ interface SelectedAuthority {
   templateUrl: './issue-review.component.html',
   styleUrls: ['./issue-review.component.scss']
 })
-export class IssueReviewComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class IssueReviewComponent implements OnInit {
+  private _destroyRef = inject(DestroyRef);
 
   issueData: any = null;
   selectedAuthorities: SelectedAuthority[] = [];
@@ -76,11 +75,6 @@ export class IssueReviewComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCompleteIssueData();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private loadCompleteIssueData(): void {
@@ -187,7 +181,7 @@ export class IssueReviewComponent implements OnInit, OnDestroy {
     };
 
     this.apiService.createIssue(issueToSubmit)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe({
         next: (result) => {
           console.log('[ISSUE REVIEW] Issue submitted successfully:', result);

@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
-import { Observable, Subject, of } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -47,8 +47,8 @@ import {
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class LoginComponent implements OnInit {
+  private _destroyRef = inject(DestroyRef);
 
   loginForm!: FormGroup;
   passwordVisible = false;
@@ -73,17 +73,12 @@ export class LoginComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Check if user is already authenticated
     this.isAuthenticated$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe(isAuthenticated => {
         if (isAuthenticated) {
           this.navigateAfterLogin();
         }
       });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private initializeForm(): void {

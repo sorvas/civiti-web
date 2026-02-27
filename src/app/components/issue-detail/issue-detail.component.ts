@@ -1,7 +1,8 @@
-import { Component, inject, OnInit, OnDestroy, AfterViewInit, PLATFORM_ID, viewChild, ChangeDetectorRef, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, AfterViewInit, PLATFORM_ID, viewChild, ChangeDetectorRef, signal, DestroyRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -29,11 +30,13 @@ import { IssueDetailResponse, isPubliclyViewableStatus } from '../../types/civic
 import { EmailModalComponent } from './email-modal.component';
 import { GoogleMap, MapMarker, MapInfoWindow } from '@angular/google-maps';
 import { GoogleMapsConfigService } from '../../services/google-maps-config.service';
-import { StatusTextPipe, StatusColorPipe, IsActivePipe } from '../../pipes/status.pipe';
+import { StatusTextPipe, StatusColorPipe, IsActivePipe, IsTerminalStatePipe } from '../../pipes/status.pipe';
 import { IsUrgentPipe } from '../../pipes/urgency.pipe';
+import { DaysSincePipe } from '../../pipes/date.pipe';
 import { CommentsComponent } from '../shared/comments/comments.component';
 import { PhotoDownloadService, PhotoDownloadProgress } from '../../services/photo-download.service';
 import { environment } from '../../../environments/environment';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
     selector: 'app-issue-detail',
@@ -60,7 +63,9 @@ import { environment } from '../../../environments/environment';
         StatusTextPipe,
         StatusColorPipe,
         IsActivePipe,
+        IsTerminalStatePipe,
         IsUrgentPipe,
+        DaysSincePipe,
         CommentsComponent,
     ],
     templateUrl: './issue-detail.component.html',
@@ -76,10 +81,12 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     private _cdr = inject(ChangeDetectorRef);
     private _http = inject(HttpClient);
     private _photoDownloadService = inject(PhotoDownloadService);
+    private _seo = inject(SeoService);
     private _imageErrorCount: Map<string, number> = new Map();
     private _lightbox: any;
     private _geocodedAddress: string | null = null;
-    private _destroy$ = new Subject<void>();
+    private _destroyRef = inject(DestroyRef);
+    private _isDestroyed = false;
     private _geocodeRetryCount = 0;
     private readonly _maxGeocodeRetries = 10;
     private _geocodeTimeoutId?: number;
@@ -139,7 +146,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
         // Track current user ID for vote validation
         this._store.select(selectAuthUser).pipe(
-            takeUntil(this._destroy$)
+            takeUntilDestroyed(this._destroyRef)
         ).subscribe(user => {
             this._currentUserId = user?.id || null;
         });
@@ -155,7 +162,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
                 IssueActions.syncVoteState
             ),
             filter(action => action.issueId === this._currentIssueId),
-            takeUntil(this._destroy$)
+            takeUntilDestroyed(this._destroyRef)
         ).subscribe(() => {
             this.isVoting.set(false);
         });
@@ -163,7 +170,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         // Reinitialize gallery when issue data changes (only in browser)
         if (isPlatformBrowser(this._platformId) && this.issue$) {
             this.issue$.pipe(
-                takeUntil(this._destroy$)
+                takeUntilDestroyed(this._destroyRef)
             ).subscribe(issue => {
                 if (issue && this._lightbox) {
                     // Clear any existing timeout
@@ -171,7 +178,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
                         clearTimeout(this._galleryTimeoutId);
                     }
                     this._galleryTimeoutId = setTimeout(() => {
-                        if (!this._destroy$.closed) {
+                        if (!this._isDestroyed) {
                             this.refreshGallery();
                         }
                     }, 100) as any;
@@ -195,7 +202,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
                 this._store.select(selectAuthUser)
             ]).pipe(
                 take(1),
-                takeUntil(this._destroy$)
+                takeUntilDestroyed(this._destroyRef)
             ).subscribe(([issue, _initialized, isAdmin, currentUser]) => {
                 const canView = isPubliclyViewableStatus(issue.status);
                 const isOwner = currentUser?.id === issue.user.id;
@@ -207,6 +214,28 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
                 }
             });
 
+            // Set dynamic SEO meta tags when issue data loads
+            this.issue$.pipe(
+                filter(issue => !!issue),
+                take(1),
+                takeUntilDestroyed(this._destroyRef)
+            ).subscribe(issue => {
+                const description = issue.description?.trim()
+                    ? (issue.description.length > 155
+                        ? issue.description.substring(0, 152) + '...'
+                        : issue.description)
+                    : `Problemă raportată: ${issue.title}`;
+                const primaryPhoto = issue.photos?.find(p => p.isPrimary)?.url || issue.photos?.[0]?.url;
+                const baseUrl = environment.production ? 'https://civiti.ro' : 'http://localhost:4200';
+                this._seo.updateMetaTags({
+                    title: issue.title,
+                    description,
+                    ogImage: primaryPhoto,
+                    ogUrl: `${baseUrl}/issue/${issue.id}`,
+                    ogType: 'article',
+                });
+            });
+
             // Initialize Google Maps with the new loader
             this.initializeGoogleMaps().then(() => {
                 this.isMapLoaded = true;
@@ -216,7 +245,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
                 this.issue$.pipe(
                     filter(issue => !!issue),
                     take(1),
-                    takeUntil(this._destroy$)
+                    takeUntilDestroyed(this._destroyRef)
                 ).subscribe(issue => {
                     // Update marker options with issue title
                     this.markerOptions = {
@@ -244,10 +273,8 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     ngOnDestroy(): void {
-        // Clean up subscriptions
-        this._destroy$.next();
-        this._destroy$.complete();
-        
+        this._isDestroyed = true;
+
         // Clear all pending timeouts
         if (this._geocodeTimeoutId) {
             clearTimeout(this._geocodeTimeoutId);
@@ -553,7 +580,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
             
             this._geocodeTimeoutId = setTimeout(() => {
                 // Check if component is still alive before calling geocodeAddress
-                if (!this._destroy$.closed) {
+                if (!this._isDestroyed) {
                     this.geocodeAddress(address);
                 }
             }, delay) as any;
@@ -594,7 +621,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
                     this.issue$.pipe(
                         filter(issue => !!issue),
                         take(1),
-                        takeUntil(this._destroy$)
+                        takeUntilDestroyed(this._destroyRef)
                     ).subscribe(issue => {
                         if (issue.latitude && issue.longitude) {
                             this.mapCenter = { lat: issue.latitude, lng: issue.longitude };
@@ -624,7 +651,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
             
             this._geocodeTimeoutId = setTimeout(() => {
                 // Check if component is still alive before calling geocodeAddress
-                if (!this._destroy$.closed) {
+                if (!this._isDestroyed) {
                     this.geocodeAddress(address);
                 }
             }, delay) as any;
@@ -661,7 +688,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         this.issue$.pipe(
             filter(issue => !!issue),
             take(1),
-            takeUntil(this._destroy$)
+            takeUntilDestroyed(this._destroyRef)
         ).subscribe(issue => {
             if (issue.latitude && issue.longitude) {
                 this.mapCenter = { lat: issue.latitude, lng: issue.longitude };
@@ -751,7 +778,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         const posterUrl = `${environment.apiUrl}/issues/${issue.id}/poster`;
 
         this._http.get(posterUrl, { responseType: 'blob' })
-            .pipe(takeUntil(this._destroy$))
+            .pipe(takeUntilDestroyed(this._destroyRef))
             .subscribe({
                 next: (blob) => {
                     const blobUrl = URL.createObjectURL(blob);
@@ -789,7 +816,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
             .pipe(
                 filter(progress => progress.downloadId === this._currentDownloadId),
                 takeUntil(this._downloadComplete$),
-                takeUntil(this._destroy$)
+                takeUntilDestroyed(this._destroyRef)
             )
             .subscribe(progress => {
                 this.downloadProgress = progress;
@@ -798,7 +825,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
         this._photoDownloadService
             .downloadPhotosAsZip(issue.photos, issue.id, downloadId, issue.title)
-            .pipe(takeUntil(this._destroy$))
+            .pipe(takeUntilDestroyed(this._destroyRef))
             .subscribe({
                 next: result => {
                     // Only process if this is still the current download

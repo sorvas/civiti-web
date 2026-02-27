@@ -1,9 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -59,8 +58,8 @@ interface PhotoData {
   templateUrl: './issue-details.component.html',
   styleUrls: ['./issue-details.component.scss']
 })
-export class IssueDetailsComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class IssueDetailsComponent implements OnInit {
+  private _destroyRef = inject(DestroyRef);
 
   // Issue ID - generated once and reused across saves
   private issueId: string | null = null;
@@ -86,11 +85,6 @@ export class IssueDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadSessionData();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private initializeForm(): void {
@@ -198,7 +192,7 @@ export class IssueDetailsComponent implements OnInit, OnDestroy {
     this.isEnhancingAI = true;
 
     this.apiService.enhanceIssueText(request)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe({
         next: (response) => {
           this.detailsForm.patchValue({

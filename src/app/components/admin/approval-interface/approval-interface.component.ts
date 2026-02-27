@@ -1,9 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -25,6 +24,9 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 
 import { ApiService } from '../../../services/api.service';
+import { CategoryColorPipe } from '../../../pipes/category.pipe';
+import { UrgencyStatusPipe } from '../../../pipes/urgency.pipe';
+import { TimeAgoPipe } from '../../../pipes/date.pipe';
 import {
   AdminIssueListItem,
   AdminStatisticsResponse,
@@ -58,13 +60,20 @@ import {
     NzGridModule,
     NzBadgeModule,
     NzTypographyModule,
-    NzCheckboxModule
+    NzCheckboxModule,
+    CategoryColorPipe,
+    UrgencyStatusPipe,
+    TimeAgoPipe
   ],
   templateUrl: './approval-interface.component.html',
   styleUrls: ['./approval-interface.component.scss']
 })
-export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class ApprovalInterfaceComponent implements OnInit {
+  private readonly apiService = inject(ApiService);
+  private readonly message = inject(NzMessageService);
+  private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   pendingIssues: AdminIssueListItem[] = [];
   adminStats: AdminStatisticsResponse | null = null;
@@ -84,22 +93,12 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
   isBulkApprovalModalVisible = false;
   bulkApprovalNotes = '';
 
-  constructor(
-    private apiService: ApiService,
-    private message: NzMessageService,
-    private fb: FormBuilder,
-    private router: Router
-  ) {
+  constructor() {
     this.initializeForm();
   }
 
   ngOnInit(): void {
     this.loadData();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   calculateApprovalRate(): number {
@@ -119,7 +118,7 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
 
     // Load pending issues
     this.apiService.getPendingIssues()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
           // Convert API response to component format
@@ -145,7 +144,7 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
 
     // Load admin statistics
     this.apiService.getAdminStatistics()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (stats: AdminStatisticsResponse) => {
           this.adminStats = stats;
@@ -252,7 +251,7 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
       };
 
       this.apiService.approveIssue(issueId, approvalData)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (result) => {
             console.log('[ADMIN] Issue approved successfully:', result);
@@ -272,7 +271,7 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
       };
 
       this.apiService.rejectIssue(issueId, rejectionData)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (result) => {
             console.log('[ADMIN] Issue rejected successfully:', result);
@@ -383,7 +382,7 @@ export class ApprovalInterfaceComponent implements OnInit, OnDestroy {
     console.log('[ADMIN] Submitting bulk approval for', request.issueIds.length, 'issues');
 
     this.apiService.bulkApproveIssues(request)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
           console.log('[ADMIN] Bulk approval completed:', response);

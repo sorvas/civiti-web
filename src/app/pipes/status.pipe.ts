@@ -78,3 +78,40 @@ export class IsActivePipe implements PipeTransform {
     return status.toLowerCase() === 'active';
   }
 }
+
+@Pipe({
+  name: 'isCancelled',
+  standalone: true,
+  pure: true
+})
+export class IsCancelledPipe implements PipeTransform {
+  transform(status: string | null | undefined): boolean {
+    if (!status) return false;
+    return status.toLowerCase() === 'cancelled';
+  }
+}
+
+@Pipe({
+  name: 'isRejected',
+  standalone: true,
+  pure: true
+})
+export class IsRejectedPipe implements PipeTransform {
+  transform(status: string | null | undefined): boolean {
+    if (!status) return false;
+    return status.toLowerCase() === 'rejected';
+  }
+}
+
+@Pipe({
+  name: 'isTerminalState',
+  standalone: true,
+  pure: true
+})
+export class IsTerminalStatePipe implements PipeTransform {
+  transform(status: string | null | undefined): boolean {
+    if (!status) return false;
+    const normalized = status.toLowerCase();
+    return normalized === 'resolved' || normalized === 'cancelled';
+  }
+}

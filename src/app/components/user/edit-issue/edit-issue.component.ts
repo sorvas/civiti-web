@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
-import { Subject, of, from, merge } from 'rxjs';
-import { takeUntil, switchMap, finalize, catchError, toArray } from 'rxjs/operators';
+import { of, from, merge } from 'rxjs';
+import { switchMap, finalize, catchError, toArray } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import imageCompression from 'browser-image-compression';
 
 // NG-ZORRO imports
@@ -45,8 +46,8 @@ import * as UserIssuesActions from '../../../store/user-issues/user-issues.actio
   templateUrl: './edit-issue.component.html',
   styleUrls: ['./edit-issue.component.scss']
 })
-export class EditIssueComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class EditIssueComponent implements OnInit {
+  private _destroyRef = inject(DestroyRef);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private fb = inject(FormBuilder);
@@ -88,12 +89,12 @@ export class EditIssueComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Load current user first, then load issue
     this.authService.getCurrentUserOnceReady()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe(user => {
         if (user) {
           this.currentUserId = user.id;
           // Now that we have the user, check for issue ID and load
-          this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
+          this.route.params.pipe(takeUntilDestroyed(this._destroyRef)).subscribe(params => {
             this.issueId = params['id'];
             if (this.issueId) {
               this.loadIssue();
@@ -107,17 +108,12 @@ export class EditIssueComponent implements OnInit, OnDestroy {
       });
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   private loadIssue(): void {
     this.isLoading = true;
     this.loadError = null;
 
     this.apiService.getIssueById(this.issueId)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe({
         next: (issue) => {
           this.isLoading = false;
@@ -234,7 +230,7 @@ export class EditIssueComponent implements OnInit, OnDestroy {
       // Upload new photos first
       this.isUploading = true;
       this.uploadNewPhotos(newPhotos).pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this._destroyRef),
         finalize(() => {
           this.isUploading = false;
         })
@@ -314,7 +310,7 @@ export class EditIssueComponent implements OnInit, OnDestroy {
     };
 
     this.apiService.editUserIssue(this.issueId, updateData)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe({
         next: () => {
           this.isSaving = false;

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -34,9 +34,7 @@ export interface TokenResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  constructor(
-    private supabaseAuthService: SupabaseAuthService
-  ) {}
+  private readonly supabaseAuthService = inject(SupabaseAuthService);
 
   // ============================================
   // Authentication Methods

@@ -1,9 +1,9 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 
 // NG-ZORRO imports
@@ -29,7 +29,8 @@ import {
   IssueStatus,
   isActiveStatus
 } from '../../../types/civica-api.types';
-import { StatusTextPipe, StatusColorPipe } from '../../../pipes/status.pipe';
+import { StatusTextPipe, StatusColorPipe, IsActivePipe, IsCancelledPipe, IsRejectedPipe } from '../../../pipes/status.pipe';
+import { DaysSincePipe } from '../../../pipes/date.pipe';
 
 @Component({
   selector: 'app-my-issues',
@@ -51,13 +52,17 @@ import { StatusTextPipe, StatusColorPipe } from '../../../pipes/status.pipe';
     NzToolTipModule,
     NzAlertModule,
     StatusTextPipe,
-    StatusColorPipe
+    StatusColorPipe,
+    IsActivePipe,
+    IsCancelledPipe,
+    IsRejectedPipe,
+    DaysSincePipe
   ],
   templateUrl: './my-issues.component.html',
   styleUrls: ['./my-issues.component.scss']
 })
-export class MyIssuesComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class MyIssuesComponent implements OnInit {
+  private _destroyRef = inject(DestroyRef);
   private store = inject(Store<AppState>);
   private router = inject(Router);
   private modal = inject(NzModalService);
@@ -85,14 +90,9 @@ export class MyIssuesComponent implements OnInit, OnDestroy {
     this.store.dispatch(UserIssuesActions.loadUserIssues({}));
 
     // Sync filter state
-    this.statusFilter$.pipe(takeUntil(this.destroy$)).subscribe(filter => {
+    this.statusFilter$.pipe(takeUntilDestroyed(this._destroyRef)).subscribe(filter => {
       this.selectedFilter = filter;
     });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   onFilterChange(value: string | number): void {

@@ -5,6 +5,7 @@
       <!-- Header Row: Title -->
       <div class="control-panel-header">
         <div class="header-info">
+          <h1 class="sr-only">Probleme Active</h1>
           <h2 class="text-oxford-blue font-semibold text-lg">
             {{ (totalIssues$ | async) || 0 }} probleme documentate
           </h2>
@@ -79,7 +80,7 @@
               nzPlaceHolder="Sector"
               nzAllowClear
               nzSize="default"
-              style="width: 100%">
+              class="w-full">
               @for (d of districts; track $index) {
                 <nz-option [nzValue]="d" [nzLabel]="d"></nz-option>
               }
@@ -94,7 +95,7 @@
               nzPlaceHolder="Categorie"
               nzAllowClear
               nzSize="default"
-              style="width: 100%">
+              class="w-full">
               @for (c of categories; track c.value) {
                 <nz-option [nzValue]="c.value" [nzLabel]="c.label"></nz-option>
               }
@@ -108,7 +109,7 @@
               (ngModelChange)="onStatusChange()"
               nzPlaceHolder="Status"
               nzSize="default"
-              style="width: 100%">
+              class="w-full">
               @for (s of statusOptions; track s.value) {
                 <nz-option [nzValue]="s.value" [nzLabel]="s.label"></nz-option>
               }
@@ -121,7 +122,7 @@
               [(ngModel)]="sortBy"
               (ngModelChange)="onSortChange()"
               nzSize="default"
-              style="width: 100%">
+              class="w-full">
               <nz-option nzValue="date" nzLabel="Cele mai noi"></nz-option>
               <nz-option nzValue="emails" nzLabel="Contribuții"></nz-option>
               <nz-option nzValue="votes" nzLabel="Cele mai votate"></nz-option>
@@ -218,7 +219,7 @@
               <!-- Days Since -->
               <div class="stat-item" nz-tooltip nzTooltipTitle="Zile de la raportare">
                 <i nz-icon nzType="calendar" nzTheme="outline"></i>
-                <span class="stat-value">{{ getDaysSince(issue.createdAt) }}</span>
+                <span class="stat-value">{{ issue.createdAt | daysSince }}</span>
               </div>
             </div>
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { SupabaseClient, User } from '@supabase/supabase-js';
 import { Observable, from, BehaviorSubject, ReplaySubject, throwError } from 'rxjs';
 import { map, catchError, tap, filter, take, switchMap } from 'rxjs/operators';
@@ -28,11 +28,12 @@ export interface SupabaseAuthResponse {
   providedIn: 'root'
 })
 export class SupabaseAuthService {
+  private readonly supabaseClientService = inject(SupabaseClientService);
   private supabase: SupabaseClient;
   private currentUser$ = new BehaviorSubject<SupabaseAuthUser | null>(null);
   private authReady$ = new ReplaySubject<boolean>(1);
 
-  constructor(private supabaseClientService: SupabaseClientService) {
+  constructor() {
     this.supabase = this.supabaseClientService.getClient();
 
     // Listen for auth state changes

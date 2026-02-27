@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy, inject, input, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, DestroyRef, inject, input, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
-import { Observable, Subject, combineLatest } from 'rxjs';
-import { takeUntil, map, take } from 'rxjs/operators';
+import { Observable, combineLatest } from 'rxjs';
+import { map, take } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
@@ -42,7 +43,7 @@ export class CommentsComponent implements OnInit, OnDestroy {
   issueStatus = input<string>('');
 
   private store = inject(Store<AppState>);
-  private destroy$ = new Subject<void>();
+  private _destroyRef = inject(DestroyRef);
   private previousIssueId: string | null = null;
 
   commentTree$!: Observable<CommentNode[]>;
@@ -125,15 +126,13 @@ export class CommentsComponent implements OnInit, OnDestroy {
 
     // Sync sortValue with store
     combineLatest([this.sortBy$, this.sortDescending$]).pipe(
-      takeUntil(this.destroy$)
+      takeUntilDestroyed(this._destroyRef)
     ).subscribe(([sortBy, sortDescending]) => {
       this.sortValue = `${sortBy}-${sortDescending ? 'desc' : 'asc'}`;
     });
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
     this.store.dispatch(CommentsActions.clearComments());
   }
 
