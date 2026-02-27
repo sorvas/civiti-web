@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { distinctUntilChanged, map } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -21,6 +22,7 @@ import { NzTypographyModule } from 'ng-zorro-antd/typography';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { StatusTextPipe, StatusColorPipe } from '../../../pipes/status.pipe';
 import { ActivityIconPipe, ActivityColorPipe } from '../../../pipes/activity.pipe';
+import { LevelTitlePipe, BadgeColorPipe } from '../../../pipes/dashboard.pipe';
 import { AppState } from '../../../store/app.state';
 import * as UserActions from '../../../store/user/user.actions';
 import * as UserIssuesActions from '../../../store/user-issues/user-issues.actions';
@@ -76,57 +78,36 @@ import {
     StatusTextPipe,
     StatusColorPipe,
     ActivityIconPipe,
-    ActivityColorPipe
+    ActivityColorPipe,
+    LevelTitlePipe,
+    BadgeColorPipe
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class DashboardComponent implements OnInit {
+  private readonly store = inject<Store<AppState>>(Store);
+  private readonly router = inject(Router);
+  private readonly _destroyRef = inject(DestroyRef);
 
-  // Observables - initialized in constructor
-  user$!: Observable<AuthUser | null>;
-  userPoints$!: Observable<number>;
-  userLevel$!: Observable<number>;
-  userStats$!: Observable<UserStats | null>;
-  levelProgress$!: Observable<{ current: number; required: number; percentage: number }>;
-  earnedBadges$!: Observable<BadgeResponse[]>;
-  incompleteAchievements$!: Observable<Achievement[]>;
-  isLoading$!: Observable<boolean>;
+  // Observables - initialized as class fields
+  user$ = this.store.select(selectAuthUser);
+  userPoints$ = this.store.select(selectUserPoints);
+  userLevel$ = this.store.select(selectUserLevel);
+  userStats$ = this.store.select(selectUserStats);
+  levelProgress$ = this.store.select(selectNextLevelProgress);
+  earnedBadges$ = this.store.select(selectUserBadges);
+  incompleteAchievements$ = this.store.select(selectIncompleteAchievements);
+  isLoading$ = this.store.select(selectUserLoading);
 
   // User Issues Observables
-  userIssuesSummary$!: Observable<{ active: number; resolved: number; rejected: number; total: number }>;
-  recentUserIssues$!: Observable<IssueItem[]>;
-  userIssuesLoading$!: Observable<boolean>;
+  userIssuesSummary$ = this.store.select(UserIssuesSelectors.selectUserIssuesSummary);
+  recentUserIssues$ = this.store.select(UserIssuesSelectors.selectRecentUserIssues);
+  userIssuesLoading$ = this.store.select(UserIssuesSelectors.selectUserIssuesLoading);
 
   // Activity Observables
-  recentActivity$!: Observable<ActivityFeedItem[]>;
-  activityLoading$!: Observable<boolean>;
-
-
-  constructor(
-    private store: Store<AppState>,
-    private router: Router
-  ) {
-    // Initialize observables
-    this.user$ = this.store.select(selectAuthUser);
-    this.userPoints$ = this.store.select(selectUserPoints);
-    this.userLevel$ = this.store.select(selectUserLevel);
-    this.userStats$ = this.store.select(selectUserStats);
-    this.levelProgress$ = this.store.select(selectNextLevelProgress);
-    this.earnedBadges$ = this.store.select(selectUserBadges);
-    this.incompleteAchievements$ = this.store.select(selectIncompleteAchievements);
-    this.isLoading$ = this.store.select(selectUserLoading);
-
-    // User Issues observables
-    this.userIssuesSummary$ = this.store.select(UserIssuesSelectors.selectUserIssuesSummary);
-    this.recentUserIssues$ = this.store.select(UserIssuesSelectors.selectRecentUserIssues);
-    this.userIssuesLoading$ = this.store.select(UserIssuesSelectors.selectUserIssuesLoading);
-
-    // Activity observables
-    this.recentActivity$ = this.store.select(ActivitySelectors.selectRecentActivities);
-    this.activityLoading$ = this.store.select(ActivitySelectors.selectActivityLoading);
-  }
+  recentActivity$ = this.store.select(ActivitySelectors.selectRecentActivities);
+  activityLoading$ = this.store.select(ActivitySelectors.selectActivityLoading);
 
   ngOnInit(): void {
     // Load user data when component initializes
@@ -134,7 +115,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.user$.pipe(
       map(user => user?.id ?? null),
       distinctUntilChanged(),
-      takeUntil(this.destroy$)
+      takeUntilDestroyed(this._destroyRef)
     ).subscribe(userId => {
       if (userId) {
         // loadUserProfile now returns profile WITH gamification
@@ -148,45 +129,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.store.dispatch(ActivityActions.loadMyActivity({ params: { pageSize: 5 } }));
       }
     });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  getLevelTitle(level: number | null): string {
-    if (!level) return 'Începător civic';
-
-    const titles = [
-      'Începător civic',
-      'Contribuitor comunitar',
-      'Avocat de cartier',
-      'Campion comunitar',
-      'Lider civic',
-      'Erou comunitar'
-    ];
-
-    return titles[Math.min(level - 1, titles.length - 1)];
-  }
-
-  getBadgeColor(rarity: string | null): string {
-    // Map rarity values to colors
-    // The backend uses string rarity values, we'll map common rarities
-    const colors: { [key: string]: string } = {
-      'common': 'default',
-      'uncommon': 'blue',
-      'rare': 'gold',
-      'epic': 'purple',
-      'legendary': 'red',
-      // Also keep old tier mappings for backward compatibility
-      'bronze': 'default',
-      'silver': 'blue',
-      'gold': 'gold',
-      'platinum': 'purple'
-    };
-
-    return colors[rarity?.toLowerCase() ?? ''] || 'default';
   }
 
   getBadgeIcon(category: string, rarity: string | null): string {

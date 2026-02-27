@@ -1,11 +1,35 @@
 <!doctype html>
-<html lang="en">
+<html lang="ro">
   <head>
     <meta charset="utf-8" />
-    <title>Civiti</title>
+    <title>Civiti — Participare Civică</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Civiti — Platformă de participare civică din România. Raportează probleme locale și presează autoritățile prin campanii coordonate email." />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#14213D" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Civiti" />
+    <meta property="og:title" content="Civiti — Participare Civică" />
+    <meta property="og:description" content="Raportează probleme locale și presează autoritățile prin campanii coordonate de email." />
+    <meta property="og:image" content="/images/logo/civiti-og-image.png" />
+    <meta property="og:locale" content="ro_RO" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Civiti — Participare Civică" />
+    <meta name="twitter:description" content="Raportează probleme locale și presează autoritățile prin campanii coordonate de email." />
+    <meta name="twitter:image" content="/images/logo/civiti-og-image.png" />
+
     <link rel="icon" type="image/svg+xml" href="images/logo/civiti-logo.svg" />
+
+    <!-- Preconnect to critical third-party origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cmkznjhbwmcgtbnynkft.supabase.co" />
+
     <link
       href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
@@ -24,7 +48,7 @@
   </head>
   <body>
     <app-root>
-      <div style="padding: 20px; text-align: center;">
+      <div class="app-loading-fallback">
         <h1>Loading Civiti...</h1>
         <p>If this message stays, the application failed to load.</p>
       </div>

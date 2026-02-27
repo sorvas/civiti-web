@@ -85,6 +85,12 @@ body {
   color: var(--color-text);
 }
 
+// App loading fallback (shown before Angular bootstraps)
+.app-loading-fallback {
+  padding: 20px;
+  text-align: center;
+}
+
 // Ensure routed components fill remaining viewport space after the header
 router-outlet + * {
   flex: 1 0 auto;
@@ -182,28 +188,28 @@ router-outlet + * {
 }
 
 // Utility classes for Civica styling
-.text-primary {
-  color: var(--oxford-blue) !important;
+body .text-primary {
+  color: var(--oxford-blue);
 }
 
-.text-accent {
-  color: var(--orange-web) !important;
+body .text-accent {
+  color: var(--orange-web);
 }
 
-.bg-primary {
-  background-color: var(--oxford-blue) !important;
+body .bg-primary {
+  background-color: var(--oxford-blue);
 }
 
-.bg-accent {
-  background-color: var(--orange-web) !important;
+body .bg-accent {
+  background-color: var(--orange-web);
 }
 
-.bg-surface {
-  background-color: var(--white) !important;
+body .bg-surface {
+  background-color: var(--white);
 }
 
-.bg-background {
-  background-color: var(--platinum) !important;
+body .bg-background {
+  background-color: var(--platinum);
 }
 
 // Container for main content
@@ -288,40 +294,40 @@ router-outlet + * {
 }
 
 // NG-ZORRO Global Overrides for Civica Theme
-.ant-btn-primary {
-  background-color: var(--orange-web) !important;
-  border-color: var(--orange-web) !important;
+body .ant-btn-primary {
+  background-color: var(--orange-web);
+  border-color: var(--orange-web);
   text-transform: uppercase;
   font-weight: 600;
   letter-spacing: var(--tracking-wide);
 
   &:hover,
   &:focus {
-    background: var(--gradient-cta) !important;
-    border-color: var(--orange-web) !important;
+    background: var(--gradient-cta);
+    border-color: var(--orange-web);
   }
 
   &[disabled] {
-    background-color: var(--platinum) !important;
-    border-color: var(--platinum) !important;
-    color: var(--oxford-blue) !important;
+    background-color: var(--platinum);
+    border-color: var(--platinum);
+    color: var(--oxford-blue);
     opacity: 0.6;
   }
 }
 
-.ant-btn-default {
-  color: var(--oxford-blue) !important;
-  border-color: var(--platinum) !important;
+body .ant-btn-default {
+  color: var(--oxford-blue);
+  border-color: var(--platinum);
 
   &:hover {
-    color: var(--orange-web) !important;
-    border-color: var(--orange-web) !important;
+    color: var(--orange-web);
+    border-color: var(--orange-web);
   }
 }
 
 // NG-ZORRO Card styling
-.ant-card {
-  border-color: var(--platinum) !important;
+body .ant-card {
+  border-color: var(--platinum);
 
   .ant-card-head {
     color: var(--oxford-blue);
@@ -339,21 +345,21 @@ router-outlet + * {
 }
 
 // NG-ZORRO Form styling
-.ant-form-item-label>label {
-  color: var(--oxford-blue) !important;
+body .ant-form-item-label>label {
+  color: var(--oxford-blue);
   font-weight: 600;
 
   &.ant-form-item-required::before {
-    color: var(--orange-web) !important;
+    color: var(--orange-web);
   }
 }
 
 // NG-ZORRO Tag styling (for email counter)
-.ant-tag {
+body .ant-tag {
   &.email-counter-tag {
-    background-color: var(--orange-web) !important;
-    color: var(--white) !important;
-    border: none !important;
+    background-color: var(--orange-web);
+    color: var(--white);
+    border: none;
     font-weight: 800;
     font-size: var(--text-xl);
     padding: 4px 16px;

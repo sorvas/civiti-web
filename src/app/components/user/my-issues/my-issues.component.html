@@ -17,7 +17,7 @@
         <nz-row [nzGutter]="[16, 16]">
           @for (issue of issues; track issue.id) {
             <nz-col [nzXs]="24" [nzMd]="12" [nzLg]="8">
-            <nz-card class="issue-card" [class.cancelled]="isCancelled(issue.status)" [nzCover]="coverTemplate">
+            <nz-card class="issue-card" [class.cancelled]="(issue.status | isCancelled)" [nzCover]="coverTemplate">
               <!-- Card Cover -->
               <ng-template #coverTemplate>
                 <div class="issue-cover">
@@ -52,7 +52,7 @@
                   </span>
                   <span class="meta-item">
                     <i nz-icon nzType="clock-circle" nzTheme="outline"></i>
-                    {{ getDaysSinceCreation(issue.createdAt) }} zile
+                    {{ issue.createdAt | daysSince }} zile
                   </span>
                 </div>
 
@@ -64,7 +64,7 @@
                   </button>
 
                   <!-- Edit button for rejected issues -->
-                  @if (isRejected(issue.status)) {
+                  @if ((issue.status | isRejected)) {
                     <button
                             nz-button nzType="primary" nzSize="small"
                             (click)="editIssue(issue)">
@@ -73,7 +73,7 @@
                   }
 
                   <!-- Mark as solved for active issues -->
-                  @if (isActive(issue.status)) {
+                  @if ((issue.status | isActive)) {
                     <button
                             nz-button nzType="primary" nzSize="small"
                             nz-tooltip nzTooltipTitle="Marchează problema ca rezolvată"
@@ -83,7 +83,7 @@
                   }
 
                   <!-- Cancel for active issues -->
-                  @if (isActive(issue.status)) {
+                  @if ((issue.status | isActive)) {
                     <button
                             nz-button nzType="text" nzDanger nzSize="small"
                             nz-tooltip nzTooltipTitle="Anulează problema"

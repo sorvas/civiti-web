@@ -1,14 +1,16 @@
-<nz-page-header
-  class="navbar shadow-md"
-  [nzBackIcon]="showBackButton() ? 'arrow-left' : null"
-  (nzBack)="showBackButton() ? onBack() : null">
+<nav aria-label="Navigație principală">
+  <nz-page-header
+    class="navbar shadow-md"
+    [nzBackIcon]="showBackButton() ? 'arrow-left' : null"
+    (nzBack)="showBackButton() ? onBack() : null">
 
-  <nz-page-header-title>
-    <span class="header-title-text">{{ title() }}</span>
-    @if (subtitle()) { <span class="header-subtitle">{{ subtitle() }}</span> }
-  </nz-page-header-title>
+    <nz-page-header-title>
+      <span class="header-title-text">{{ title() }}</span>
+      @if (subtitle()) { <span class="header-subtitle">{{ subtitle() }}</span> }
+    </nz-page-header-title>
 
-  <nz-page-header-extra>
-    <app-auth-buttons [showAdminLink]="true" [showIssuesLink]="true" />
-  </nz-page-header-extra>
-</nz-page-header>
+    <nz-page-header-extra>
+      <app-auth-buttons [showAdminLink]="true" [showIssuesLink]="true" />
+    </nz-page-header-extra>
+  </nz-page-header>
+</nav>

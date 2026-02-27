@@ -164,14 +164,14 @@
 }
 
 .submit-btn {
-  background: var(--orange-web) !important;
-  border-color: var(--orange-web) !important;
+  background: var(--orange-web);
+  border-color: var(--orange-web);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  
+
   &:hover {
-    background: #e8930f !important;
-    border-color: #e8930f !important;
+    background: #e8930f;
+    border-color: #e8930f;
   }
 }
 
@@ -253,8 +253,8 @@
 
 // Custom select and checkbox styles
 :deep(.ant-select-focused .ant-select-selector) {
-  border-color: var(--orange-web) !important;
-  box-shadow: 0 0 0 2px rgba(252, 163, 17, 0.2) !important;
+  border-color: var(--orange-web);
+  box-shadow: 0 0 0 2px rgba(252, 163, 17, 0.2);
 }
 
 :deep(.ant-checkbox-checked .ant-checkbox-inner) {

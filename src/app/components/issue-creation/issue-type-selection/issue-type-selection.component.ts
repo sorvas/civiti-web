@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -49,8 +49,8 @@ import { generateIssueTitle } from '../issue-title.util';
   templateUrl: './issue-type-selection.component.html',
   styleUrls: ['./issue-type-selection.component.scss']
 })
-export class IssueTypeSelectionComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class IssueTypeSelectionComponent implements OnInit {
+  private _destroyRef = inject(DestroyRef);
 
   categories: CategoryInfo[] = [];
   selectedCategory: CategoryInfo | null = null;
@@ -83,16 +83,11 @@ export class IssueTypeSelectionComponent implements OnInit, OnDestroy {
     this.loadSavedTitle();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   private loadCategories(): void {
     this.isLoading = true;
 
     this.categoryService.getCategoriesWithInfo()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe({
         next: (categories) => {
           this.categories = categories;

@@ -1,9 +1,9 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 
 // NG-ZORRO imports
@@ -25,11 +25,10 @@ import * as UserIssuesActions from '../../../store/user-issues/user-issues.actio
 import * as UserIssuesSelectors from '../../../store/user-issues/user-issues.selectors';
 import { UserIssuesStatusFilter } from '../../../store/user-issues/user-issues.state';
 import {
-  IssueItem,
-  IssueStatus,
-  isActiveStatus
+  IssueItem
 } from '../../../types/civica-api.types';
-import { StatusTextPipe, StatusColorPipe } from '../../../pipes/status.pipe';
+import { StatusTextPipe, StatusColorPipe, IsActivePipe, IsCancelledPipe, IsRejectedPipe } from '../../../pipes/status.pipe';
+import { DaysSincePipe } from '../../../pipes/date.pipe';
 
 @Component({
   selector: 'app-my-issues',
@@ -51,13 +50,17 @@ import { StatusTextPipe, StatusColorPipe } from '../../../pipes/status.pipe';
     NzToolTipModule,
     NzAlertModule,
     StatusTextPipe,
-    StatusColorPipe
+    StatusColorPipe,
+    IsActivePipe,
+    IsCancelledPipe,
+    IsRejectedPipe,
+    DaysSincePipe
   ],
   templateUrl: './my-issues.component.html',
   styleUrls: ['./my-issues.component.scss']
 })
-export class MyIssuesComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class MyIssuesComponent implements OnInit {
+  private _destroyRef = inject(DestroyRef);
   private store = inject(Store<AppState>);
   private router = inject(Router);
   private modal = inject(NzModalService);
@@ -85,14 +88,9 @@ export class MyIssuesComponent implements OnInit, OnDestroy {
     this.store.dispatch(UserIssuesActions.loadUserIssues({}));
 
     // Sync filter state
-    this.statusFilter$.pipe(takeUntil(this.destroy$)).subscribe(filter => {
+    this.statusFilter$.pipe(takeUntilDestroyed(this._destroyRef)).subscribe(filter => {
       this.selectedFilter = filter;
     });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   onFilterChange(value: string | number): void {
@@ -108,36 +106,6 @@ export class MyIssuesComponent implements OnInit, OnDestroy {
       { label: `Respinse (${summary.rejected})`, value: 'rejected' },
       { label: `Anulate (${summary.cancelled})`, value: 'cancelled' }
     ];
-  }
-
-  private normalizeStatus(status: string): IssueStatus {
-    // Map backend status values to our IssueStatus type (case-insensitive)
-    const statusMap: Record<string, IssueStatus> = {
-      'unspecified': 'Unspecified',
-      'draft': 'Draft',
-      'submitted': 'Submitted',
-      'underreview': 'UnderReview',
-      'active': 'Active',
-      'resolved': 'Resolved',
-      'rejected': 'Rejected',
-      'cancelled': 'Cancelled'
-    };
-    return statusMap[status.toLowerCase()] || 'Unspecified';
-  }
-
-  isActive(status: IssueStatus | string): boolean {
-    const normalized = this.normalizeStatus(status);
-    return isActiveStatus(normalized);
-  }
-
-  isRejected(status: IssueStatus | string): boolean {
-    const normalized = this.normalizeStatus(status);
-    return normalized === 'Rejected';
-  }
-
-  isCancelled(status: IssueStatus | string): boolean {
-    const normalized = this.normalizeStatus(status);
-    return normalized === 'Cancelled';
   }
 
   viewIssueDetails(issueId: string): void {
@@ -178,12 +146,6 @@ export class MyIssuesComponent implements OnInit, OnDestroy {
 
   navigateToCreateIssue(): void {
     this.router.navigate(['/create-issue']);
-  }
-
-  getDaysSinceCreation(createdAt: string): number {
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - new Date(createdAt).getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
 
   onImageError(event: Event): void {

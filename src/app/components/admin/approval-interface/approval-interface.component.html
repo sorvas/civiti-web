@@ -122,21 +122,21 @@
               </td>
 
               <td>
-                <nz-tag [nzColor]="getCategoryColor(issue.category)">
+                <nz-tag [nzColor]="issue.category | categoryColor">
                   {{ issue.category | titlecase }}
                 </nz-tag>
               </td>
 
               <td>
                 <nz-badge
-                  [nzStatus]="getUrgencyStatus(issue.urgency)"
+                  [nzStatus]="issue.urgency | urgencyStatus"
                   [nzText]="issue.urgency | titlecase">
                 </nz-badge>
               </td>
 
               <td>
                 <div class="submission-time">
-                  {{ getTimeAgo(issue.createdAt) }}
+                  {{ issue.createdAt | timeAgo }}
                 </div>
               </td>
 
@@ -206,15 +206,15 @@
             <div class="issue-header">
               <h3>{{ selectedIssue.title }}</h3>
               <div class="issue-meta">
-                <nz-tag [nzColor]="getCategoryColor(selectedIssue.category)">
+                <nz-tag [nzColor]="selectedIssue.category | categoryColor">
                   {{ selectedIssue.category | titlecase }}
                 </nz-tag>
                 <nz-badge
-                  [nzStatus]="getUrgencyStatus(selectedIssue.urgency)"
+                  [nzStatus]="selectedIssue.urgency | urgencyStatus"
                   [nzText]="selectedIssue.urgency | titlecase">
                 </nz-badge>
                 <span class="submission-time">
-                  Trimis {{ getTimeAgo(selectedIssue.createdAt) }}
+                  Trimis {{ selectedIssue.createdAt | timeAgo }}
                 </span>
               </div>
             </div>
@@ -243,15 +243,15 @@
               <nz-form-control [nzSpan]="24">
                 <nz-radio-group formControlName="decision">
                   <label nz-radio nzValue="approve">
-                    <span nz-icon nzType="check-circle" style="color: #28A745;"></span>
+                    <span nz-icon nzType="check-circle" class="decision-icon-approve"></span>
                     Aprobă
                   </label>
                   <label nz-radio nzValue="reject">
-                    <span nz-icon nzType="close-circle" style="color: #DC3545;"></span>
+                    <span nz-icon nzType="close-circle" class="decision-icon-reject"></span>
                     Respinge
                   </label>
                   <label nz-radio nzValue="request_changes">
-                    <span nz-icon nzType="exclamation-circle" style="color: #FCA311;"></span>
+                    <span nz-icon nzType="exclamation-circle" class="decision-icon-changes"></span>
                     Solicită modificări
                   </label>
                 </nz-radio-group>

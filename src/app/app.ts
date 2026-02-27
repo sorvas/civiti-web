@@ -1,11 +1,12 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd, ActivatedRoute } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
-import { filter, map } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppState } from './store/app.state';
 import * as AuthActions from './store/auth/auth.actions';
 import { HeaderComponent } from './components/shared/header/header.component';
+import { SeoService } from './services/seo.service';
 
 interface RouteConfig {
   title: string;
@@ -17,16 +18,18 @@ interface RouteConfig {
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, HeaderComponent],
+  imports: [RouterOutlet, HeaderComponent],
   template: `
-    <app-header
-      *ngIf="!routeConfig.hideHeader"
-      [title]="routeConfig.title"
-      [showBackButton]="routeConfig.showBackButton"
-      [backUrl]="routeConfig.backUrl"
-      [subtitle]="routeConfig.subtitle">
-    </app-header>
-    <router-outlet />
+    @if (!routeConfig.hideHeader) {
+      <app-header
+        [title]="routeConfig.title"
+        [showBackButton]="routeConfig.showBackButton"
+        [backUrl]="routeConfig.backUrl"
+        [subtitle]="routeConfig.subtitle" />
+    }
+    <main>
+      <router-outlet />
+    </main>
   `,
   styleUrl: './app.scss',
   standalone: true
@@ -35,6 +38,8 @@ export class App implements OnInit {
   private _store = inject(Store<AppState>);
   private _router = inject(Router);
   private _activatedRoute = inject(ActivatedRoute);
+  private _seo = inject(SeoService);
+  private _destroyRef = inject(DestroyRef);
 
   // Default route config - hideHeader true to prevent flash on cold start
   routeConfig: RouteConfig = {
@@ -56,7 +61,8 @@ export class App implements OnInit {
 
     // Listen to route changes and update header config
     this._router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
+      filter(event => event instanceof NavigationEnd),
+      takeUntilDestroyed(this._destroyRef)
     ).subscribe(() => {
       this.updateRouteConfig();
     });
@@ -75,5 +81,12 @@ export class App implements OnInit {
       hideHeader: data['hideHeader'] ?? false,
       subtitle: data['headerSubtitle'] || null
     };
+
+    const seo = data['seo'];
+    if (seo) {
+      this._seo.updateMetaTags(seo);
+    } else {
+      this._seo.resetToDefaults();
+    }
   }
 }

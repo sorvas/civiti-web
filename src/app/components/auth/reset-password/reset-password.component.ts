@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AbstractControl, FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil, take } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { take } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -43,8 +44,8 @@ import { SupabaseAuthService } from '../../../services/supabase-auth.service';
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.scss']
 })
-export class ResetPasswordComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class ResetPasswordComponent implements OnInit {
+  private _destroyRef = inject(DestroyRef);
 
   resetPasswordForm!: FormGroup;
   passwordVisible = false;
@@ -73,16 +74,11 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
     this.checkSession();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   private checkSession(): void {
     // Wait for Supabase to process the recovery token from the URL hash
     // Using the observable ensures we wait for auth initialization to complete
     this.supabaseAuthService.getSessionOnceReady()
-      .pipe(take(1), takeUntil(this.destroy$))
+      .pipe(take(1), takeUntilDestroyed(this._destroyRef))
       .subscribe({
         next: (session) => {
           this.sessionValid = !!session;

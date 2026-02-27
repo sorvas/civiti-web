@@ -3,6 +3,10 @@
   flex-direction: column;
 }
 
+.visually-hidden {
+  display: none;
+}
+
 .photo-upload-container {
   flex: 1;
   background: var(--platinum);

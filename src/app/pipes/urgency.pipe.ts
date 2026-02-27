@@ -16,3 +16,22 @@ export class IsUrgentPipe implements PipeTransform {
     return urgency === 'urgent';
   }
 }
+
+@Pipe({
+  name: 'urgencyStatus',
+  standalone: true,
+  pure: true
+})
+export class UrgencyStatusPipe implements PipeTransform {
+  private static readonly STATUSES: Record<string, 'default' | 'processing' | 'success' | 'error' | 'warning'> = {
+    'low': 'default',
+    'medium': 'processing',
+    'high': 'warning',
+    'urgent': 'error'
+  };
+
+  transform(urgency: string | null | undefined): 'default' | 'processing' | 'success' | 'error' | 'warning' {
+    if (!urgency) return 'default';
+    return UrgencyStatusPipe.STATUSES[urgency] || 'default';
+  }
+}

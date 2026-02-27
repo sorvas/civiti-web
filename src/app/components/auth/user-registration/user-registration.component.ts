@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy, viewChild, TemplateRef } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject, viewChild, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -84,8 +84,8 @@ interface RegistrationData {
   templateUrl: './user-registration.component.html',
   styleUrls: ['./user-registration.component.scss']
 })
-export class UserRegistrationComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class UserRegistrationComponent implements OnInit {
+  private _destroyRef = inject(DestroyRef);
 
   privacyPolicyTemplate = viewChild.required<TemplateRef<void>>('privacyPolicyTemplate');
   termsTemplate = viewChild.required<TemplateRef<void>>('termsTemplate');
@@ -127,7 +127,7 @@ export class UserRegistrationComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Check if user is already authenticated
     this.isAuthenticated$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe(isAuthenticated => {
         if (isAuthenticated) {
           this.navigateAfterRegistration();
@@ -136,15 +136,10 @@ export class UserRegistrationComponent implements OnInit, OnDestroy {
 
     // Watch for county changes to update cities
     this.registrationForm.get('county')?.valueChanges
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe(countyCode => {
         this.onCountyChange(countyCode);
       });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private initializeForm(): void {

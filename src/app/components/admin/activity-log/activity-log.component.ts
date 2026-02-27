@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, of } from 'rxjs';
-import { catchError, switchMap, takeUntil } from 'rxjs/operators';
+import { catchError, switchMap } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -20,6 +21,8 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 
 import { ApiService } from '../../../services/api.service';
 import { AdminActivityLogEntry, AdminActionType, PagedResult } from '../../../types/civica-api.types';
+import { ActionLabelPipe, ActionColorPipe, TimelineColorPipe, TargetLabelPipe } from '../../../pipes/admin.pipe';
+import { FormatDateTimePipe } from '../../../pipes/date.pipe';
 
 @Component({
   selector: 'app-activity-log',
@@ -37,18 +40,23 @@ import { AdminActivityLogEntry, AdminActionType, PagedResult } from '../../../ty
     NzSpinModule,
     NzEmptyModule,
     NzPaginationModule,
-    NzAvatarModule
+    NzAvatarModule,
+    ActionLabelPipe,
+    ActionColorPipe,
+    TimelineColorPipe,
+    TargetLabelPipe,
+    FormatDateTimePipe
   ],
   templateUrl: './activity-log.component.html',
   styleUrls: ['./activity-log.component.scss']
 })
-export class ActivityLogComponent implements OnInit, OnDestroy {
+export class ActivityLogComponent implements OnInit {
   private readonly apiService = inject(ApiService);
   private readonly message = inject(NzMessageService);
+  private readonly _destroyRef = inject(DestroyRef);
 
   // Subject to trigger activity loading - switchMap cancels pending requests
   private readonly loadTrigger$ = new Subject<void>();
-  private readonly destroy$ = new Subject<void>();
 
   // Filters
   selectedAction: AdminActionType | '' = '';
@@ -71,7 +79,7 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Set up the load pipeline with switchMap to cancel stale requests
     this.loadTrigger$.pipe(
-      takeUntil(this.destroy$),
+      takeUntilDestroyed(this._destroyRef),
       switchMap(() => {
         this.isLoading = true;
 
@@ -111,11 +119,6 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
 
     // Trigger initial load
     this.loadTrigger$.next();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   loadActivities(): void {

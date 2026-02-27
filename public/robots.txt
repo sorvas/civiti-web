@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Public pages
+Allow: /location
+Allow: /issues
+Allow: /issue/
+
+# Block auth and protected routes
+Disallow: /auth/
+Disallow: /dashboard
+Disallow: /my-issues
+Disallow: /edit-issue/
+Disallow: /create-issue/
+Disallow: /admin/
+
+Sitemap: https://civiti.ro/sitemap.xml

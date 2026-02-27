@@ -1,10 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -42,9 +41,7 @@ import {
   templateUrl: './forgot-password.component.html',
   styleUrls: ['./forgot-password.component.scss']
 })
-export class ForgotPasswordComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
-
+export class ForgotPasswordComponent implements OnInit {
   forgotPasswordForm!: FormGroup;
 
   isLoading$!: Observable<boolean>;
@@ -67,11 +64,6 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Clear any previous password reset state when entering the page
     this.store.dispatch(AuthActions.clearPasswordResetState());
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private initializeForm(): void {

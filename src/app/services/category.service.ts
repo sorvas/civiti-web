@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable, of, BehaviorSubject } from 'rxjs';
 import { tap, shareReplay, map, catchError, finalize } from 'rxjs/operators';
 import { ApiService } from './api.service';
@@ -23,6 +23,8 @@ export interface CategoryInfo {
   providedIn: 'root'
 })
 export class CategoryService {
+  private readonly apiService = inject(ApiService);
+
   private categories$ = new BehaviorSubject<CategoryResponse[]>([]);
   private loaded = false;
   private loading$: Observable<CategoryResponse[]> | null = null;
@@ -36,8 +38,6 @@ export class CategoryService {
     'Safety': 'Siguranță',
     'Other': 'Altele'
   };
-
-  constructor(private apiService: ApiService) {}
 
   /**
    * Load categories from backend. Caches result for subsequent calls.

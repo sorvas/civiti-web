@@ -34,6 +34,18 @@
   }
 }
 
+.decision-icon-approve {
+  color: var(--color-success);
+}
+
+.decision-icon-reject {
+  color: var(--color-error);
+}
+
+.decision-icon-changes {
+  color: var(--orange-web);
+}
+
 .stats-section {
   margin-bottom: 2rem;
 }

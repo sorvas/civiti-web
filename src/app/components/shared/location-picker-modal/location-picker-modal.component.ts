@@ -3,6 +3,7 @@ import {
   OnInit,
   OnDestroy,
   AfterViewInit,
+  DestroyRef,
   inject,
   Inject,
   PLATFORM_ID,
@@ -20,7 +21,8 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { GoogleMap, MapMarker } from '@angular/google-maps';
-import { Subject, debounceTime, takeUntil } from 'rxjs';
+import { debounceTime } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import {
   LocationData,
@@ -63,7 +65,7 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
   private _platformId = inject(PLATFORM_ID);
   private _modalRef = inject(NzModalRef);
   private _cdr = inject(ChangeDetectorRef);
-  private _destroy$ = new Subject<void>();
+  private _destroyRef = inject(DestroyRef);
   private _isDestroyed = false;
 
   // Form control for address input
@@ -114,7 +116,7 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
     this.addressControl.valueChanges
       .pipe(
         debounceTime(300),
-        takeUntil(this._destroy$)
+        takeUntilDestroyed(this._destroyRef)
       )
       .subscribe(value => {
         if (value && value.length >= 3) {
@@ -164,8 +166,6 @@ export class LocationPickerModalComponent implements OnInit, AfterViewInit, OnDe
 
   ngOnDestroy(): void {
     this._isDestroyed = true;
-    this._destroy$.next();
-    this._destroy$.complete();
   }
 
   /**

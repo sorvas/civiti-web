@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { defer, Observable, throwError, timer } from 'rxjs';
 import { map, catchError, retry } from 'rxjs/operators';
@@ -47,6 +47,7 @@ export interface RetryConfig {
 
 @Injectable({ providedIn: 'root' })
 export class StorageService {
+  private readonly supabaseClientService = inject(SupabaseClientService);
   private supabase: SupabaseClient;
   private readonly BUCKET = 'issue-photos';
 
@@ -57,7 +58,7 @@ export class StorageService {
     maxDelayMs: 8000
   };
 
-  constructor(private supabaseClientService: SupabaseClientService) {
+  constructor() {
     this.supabase = this.supabaseClientService.getClient();
   }
 
