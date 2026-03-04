@@ -32,9 +32,7 @@ import {
   AdminStatisticsResponse,
   ApproveIssueRequest,
   RejectIssueRequest,
-  BulkApproveRequest,
-  UrgencyLevel,
-  IssueStatus
+  BulkApproveRequest
 } from '../../../types/civica-api.types';
 
 @Component({
@@ -191,7 +189,7 @@ export class ApprovalInterfaceComponent implements OnInit {
   viewPhoto(photoUrl: string): void {
     console.log('[ADMIN] View photo:', photoUrl);
     // Open photo in new tab/window
-    window.open(photoUrl, '_blank');
+    window.open(photoUrl, '_blank', 'noopener,noreferrer');
   }
 
   submitDecision(): void {

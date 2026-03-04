@@ -271,6 +271,7 @@
     [nzFooter]="null"
     [nzClosable]="!isProcessing"
     [nzMaskClosable]="!isProcessing"
+    [nzKeyboard]="!isProcessing"
     (nzOnCancel)="closeDecisionModal()"
     nzClass="decision-modal">
 
@@ -321,7 +322,9 @@
           </nz-form-item>
 
           <div class="modal-actions">
-            <button nz-button nzType="default" type="button" (click)="closeDecisionModal()">
+            <button nz-button nzType="default" type="button"
+                    [disabled]="isProcessing"
+                    (click)="closeDecisionModal()">
               Anuleaza
             </button>
             <button nz-button nzType="primary" type="submit"
