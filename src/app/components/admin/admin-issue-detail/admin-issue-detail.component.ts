@@ -103,13 +103,17 @@ export class AdminIssueDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const issueId = this.route.snapshot.paramMap.get('id');
-    if (issueId) {
-      this.loadIssue(issueId);
-    } else {
-      this.error = 'ID-ul problemei lipsește';
-      this.isLoading = false;
-    }
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const issueId = params.get('id');
+        if (issueId) {
+          this.loadIssue(issueId);
+        } else {
+          this.error = 'ID-ul problemei lipsește';
+          this.isLoading = false;
+        }
+      });
   }
 
   private loadIssue(id: string): void {
@@ -146,6 +150,7 @@ export class AdminIssueDetailComponent implements OnInit {
   }
 
   submitDecision(): void {
+    this.decisionForm.markAllAsTouched();
     if (!this.decisionForm.valid || !this.issue) return;
 
     const { decision, reason, notes } = this.decisionForm.value;
