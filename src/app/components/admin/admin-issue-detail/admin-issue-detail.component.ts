@@ -141,6 +141,9 @@ export class AdminIssueDetailComponent implements OnInit {
 
     const { decision, notes } = this.decisionForm.value;
     const issueId = this.issue.id;
+
+    if (decision !== 'approve' && decision !== 'reject') return;
+
     this.isProcessing = true;
 
     if (decision === 'approve') {
@@ -161,7 +164,7 @@ export class AdminIssueDetailComponent implements OnInit {
     } else if (decision === 'reject') {
       const data: RejectIssueRequest = {
         reason: notes || 'Nu indeplineste criteriile de aprobare',
-        adminNotes: notes
+        adminNotes: notes || undefined
       };
       this.apiService.rejectIssue(issueId, data)
         .pipe(takeUntilDestroyed(this.destroyRef))
@@ -186,6 +189,6 @@ export class AdminIssueDetailComponent implements OnInit {
   }
 
   viewPhoto(url: string): void {
-    window.open(url, '_blank');
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 }
