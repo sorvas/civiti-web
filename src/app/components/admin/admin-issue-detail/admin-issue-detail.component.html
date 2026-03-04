@@ -292,14 +292,28 @@
             </nz-form-control>
           </nz-form-item>
 
+          @if (decisionForm.get('decision')?.value === 'reject') {
+            <nz-form-item>
+              <nz-form-label [nzSpan]="24" nzRequired>Motiv respingere</nz-form-label>
+              <nz-form-control [nzSpan]="24" nzErrorTip="Motivul respingerii este obligatoriu">
+                <textarea
+                  nz-input
+                  formControlName="reason"
+                  rows="3"
+                  placeholder="Motivul respingerii (vizibil pentru utilizator)...">
+                </textarea>
+              </nz-form-control>
+            </nz-form-item>
+          }
+
           <nz-form-item>
-            <nz-form-label [nzSpan]="24" [nzRequired]="decisionForm.get('decision')?.value === 'reject'">Notițe</nz-form-label>
-            <nz-form-control [nzSpan]="24" nzErrorTip="Motivul respingerii este obligatoriu">
+            <nz-form-label [nzSpan]="24">Notițe interne</nz-form-label>
+            <nz-form-control [nzSpan]="24">
               <textarea
                 nz-input
                 formControlName="notes"
-                rows="4"
-                placeholder="Adaugă notițe sau feedback...">
+                rows="3"
+                placeholder="Notițe interne (vizibile doar pentru admin)...">
               </textarea>
             </nz-form-control>
           </nz-form-item>

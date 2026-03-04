@@ -84,17 +84,21 @@ export class AdminIssueDetailComponent implements OnInit {
   constructor() {
     this.decisionForm = this.fb.group({
       decision: ['', [Validators.required]],
+      reason: [''],
       notes: ['']
     });
 
-    this.decisionForm.get('decision')?.valueChanges.subscribe(val => {
-      const notesControl = this.decisionForm.get('notes');
+    this.decisionForm.get('decision')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(val => {
+      const reasonControl = this.decisionForm.get('reason');
       if (val === 'reject') {
-        notesControl?.setValidators([Validators.required]);
+        reasonControl?.setValidators([Validators.required]);
       } else {
-        notesControl?.clearValidators();
+        reasonControl?.clearValidators();
+        reasonControl?.reset();
       }
-      notesControl?.updateValueAndValidity();
+      reasonControl?.updateValueAndValidity();
     });
   }
 
@@ -133,7 +137,7 @@ export class AdminIssueDetailComponent implements OnInit {
 
   openDecisionModal(): void {
     this.isDecisionModalVisible = true;
-    this.decisionForm.reset({ decision: '', notes: '' });
+    this.decisionForm.reset({ decision: '', reason: '', notes: '' });
   }
 
   closeDecisionModal(): void {
@@ -144,7 +148,7 @@ export class AdminIssueDetailComponent implements OnInit {
   submitDecision(): void {
     if (!this.decisionForm.valid || !this.issue) return;
 
-    const { decision, notes } = this.decisionForm.value;
+    const { decision, reason, notes } = this.decisionForm.value;
     const issueId = this.issue.id;
 
     if (decision !== 'approve' && decision !== 'reject') return;
@@ -168,7 +172,7 @@ export class AdminIssueDetailComponent implements OnInit {
         });
     } else if (decision === 'reject') {
       const data: RejectIssueRequest = {
-        reason: notes || 'Nu indeplineste criteriile de aprobare',
+        reason: reason,
         adminNotes: notes || undefined
       };
       this.apiService.rejectIssue(issueId, data)
