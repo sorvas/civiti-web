@@ -323,7 +323,7 @@
               Anuleaza
             </button>
             <button nz-button nzType="primary" type="submit"
-                    [disabled]="!decisionForm.valid"
+                    [disabled]="!decisionForm.valid || isProcessing"
                     [nzLoading]="isProcessing">
               Trimite decizia
             </button>
