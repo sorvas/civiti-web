@@ -24,6 +24,11 @@ export class GuideListComponent {
 
   selectedCategory = signal('all');
 
+  readonly categoryLabels: Record<string, string> = {
+    'ghid-practic': 'Ghid practic',
+    'drepturi': 'Drepturi',
+  };
+
   filteredArticles = computed(() => {
     const cat = this.selectedCategory();
     if (cat === 'all') return this.articles;
@@ -41,9 +46,5 @@ export class GuideListComponent {
 
   selectCategory(value: string): void {
     this.selectedCategory.set(value);
-  }
-
-  categoryLabel(category: string): string {
-    return category === 'ghid-practic' ? 'Ghid practic' : 'Drepturi';
   }
 }

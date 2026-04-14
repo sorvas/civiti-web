@@ -21,6 +21,11 @@ export class GuideDetailComponent implements OnInit {
   article: GuideArticle | undefined;
   relatedArticles: GuideArticle[] = [];
 
+  readonly categoryLabels: Record<string, string> = {
+    'ghid-practic': 'Ghid practic',
+    'drepturi': 'Drepturi',
+  };
+
   ngOnInit(): void {
     this.route.paramMap
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -53,9 +58,5 @@ export class GuideDetailComponent implements OnInit {
         .slice(0, 2 - this.relatedArticles.length);
       this.relatedArticles.push(...more);
     }
-  }
-
-  categoryLabel(category: string): string {
-    return category === 'ghid-practic' ? 'Ghid practic' : 'Drepturi';
   }
 }

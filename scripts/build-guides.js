@@ -7,7 +7,7 @@ const CONTENT_DIR = path.join(__dirname, '..', 'src', 'content', 'guides');
 const OUTPUT_FILE = path.join(__dirname, '..', 'src', 'app', 'generated', 'guide-data.ts');
 
 // Configure marked for clean HTML output
-marked.setOptions({
+marked.use({
   gfm: true,
   breaks: false,
 });
